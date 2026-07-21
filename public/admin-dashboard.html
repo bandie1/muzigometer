@@ -87,6 +87,53 @@
     .tenant-table td.amount { font-weight: 700; color: var(--neon-cyan); }
     .empty-state { text-align: center; padding: 2rem 0; color: var(--text-muted); }
     .empty-state i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+
+    /* ---------- Responsive ---------- */
+    html { -webkit-text-size-adjust: 100%; }
+    img, svg { max-width: 100%; }
+    .table-scroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .tenant-table { min-width: 560px; }
+
+    @media (max-width: 900px) {
+      .dashboard-container { padding: 0 1rem; }
+      .properties-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .navbar { padding: 1rem 1rem; flex-wrap: wrap; gap: 0.75rem; }
+      .brand { min-width: 0; flex: 1 1 auto; }
+      .brand-icon { width: 36px; height: 36px; font-size: 1rem; flex-shrink: 0; }
+      .brand-text h1 { font-size: 1rem; line-height: 1.2; }
+      .brand-text p { font-size: 0.62rem; }
+      .nav-actions { gap: 0.6rem; flex-wrap: wrap; justify-content: flex-end; }
+      .profile-badge { padding: 0.4rem 0.75rem; font-size: 0.75rem; }
+      .profile-badge span#username-display { max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .theme-toggle-btn, .logout-btn { width: 36px; height: 36px; font-size: 0.9rem; }
+
+      .dashboard-container { margin: 1.25rem auto; padding: 0 0.85rem; }
+      .panel-card { padding: 1.25rem 1rem; border-radius: 18px; margin-bottom: 1.25rem; }
+      .panel-title { font-size: 1.1rem; gap: 0.5rem; flex-wrap: wrap; }
+
+      .properties-grid { grid-template-columns: 1fr; gap: 1rem; }
+      .property-card { padding: 1.1rem; gap: 1rem; }
+      .property-header { flex-wrap: wrap; gap: 0.5rem; }
+      .property-name { font-size: 1rem; word-break: break-word; }
+      .metric-row { font-size: 0.82rem; flex-wrap: wrap; gap: 0.25rem; }
+
+      .sensor-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem 0.5rem; }
+      .sensor-stat .s-value { font-size: 0.88rem; }
+
+      .action-group { flex-direction: column; gap: 0.6rem; }
+      .btn { padding: 0.75rem 1rem; font-size: 0.85rem; }
+
+      .tenant-table th, .tenant-table td { padding: 0.7rem 0.75rem; font-size: 0.82rem; }
+    }
+
+    @media (max-width: 400px) {
+      .brand-text h1 { font-size: 0.9rem; }
+      .sensor-grid { grid-template-columns: 1fr 1fr; }
+      .nav-actions { gap: 0.4rem; }
+    }
   </style>
 </head>
 <body>
@@ -175,7 +222,7 @@
         const total = tenants.reduce((sum, t) => sum + parseFloat(t.total_paid || 0), 0);
         rows += `<tr><td>${esc(lord.username)}</td><td>${tenants.length}</td><td class="amount">${fmt(total)} UGX</td></tr>`;
       }
-      panel.innerHTML = `<table class="tenant-table"><thead><tr><th>Landlord</th><th>Tenants Assigned</th><th>Total Collected</th></tr></thead><tbody>${rows}</tbody></table>`;
+      panel.innerHTML = `<div class="table-scroll"><table class="tenant-table"><thead><tr><th>Landlord</th><th>Tenants Assigned</th><th>Total Collected</th></tr></thead><tbody>${rows}</tbody></table></div>`;
     }
 
     function renderTenantsByLandlord(landlords, tenantsByLandlord) {
@@ -196,10 +243,12 @@
         }
         html += `<div class="panel-card">
           <div class="panel-title"><i class="fa-solid fa-sack-dollar"></i> Tenants Under ${esc(lord.username)}</div>
+          <div class="table-scroll">
           <table class="tenant-table">
             <thead><tr><th>Tenant</th><th>Room</th><th>Units Remaining</th><th>Amount Paid So Far</th><th>Total Amount Paid</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
+          </div>
         </div>`;
       }
       container.innerHTML = html;
