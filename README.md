@@ -23,20 +23,23 @@ api/
   telemetry.js           -> POST/GET, the ESP32 endpoint (no auth — device can't hold a cookie)
   dashboard/
     admin.js             -> GET, JSON data for admin dashboard (requires admin session)
-    admin-action.js       -> POST, handles Reset/Force Restore buttons
+    admin-action.js       -> POST, handles Reset/Force Restore buttons (admin, any room)
+    landlord.js            -> GET, JSON data scoped to the logged-in landlord's own rooms
+    landlord-action.js     -> POST, Reset/Force Restore, scoped to the landlord's own rooms
+    tenant.js               -> GET, read-only JSON for the logged-in tenant's own room
 lib/
   db.js                  -> shared Postgres pool
   auth.js                -> JWT cookie helpers
 public/
   login.html
-  admin-dashboard.html    -> full worked example
+  signup.html             -> landlord/tenant registration form
+  forgot-password.html    -> username + new password reset form
+  admin-dashboard.html    -> full worked example (system-wide view)
+  landlord-dashboard.html -> portfolio summary + own rooms, with Reset/Force Restore
+  tenant-dashboard.html   -> read-only view of the tenant's own room + live sensor readings
 ```
 
-## Still to do (same pattern, not yet built)
-`landlord-dashboard.html` + `api/dashboard/landlord.js`, `tenant-dashboard.html` +
-`api/dashboard/tenant.js`, and `signup.html` / `forgot-password.html` (simple forms —
-follow `login.html`'s fetch pattern, posting to `/api/signup` and `/api/forgot-password`).
-Happy to build these next — just say the word.
+All dashboards and forms are fully responsive (mobile, tablet, desktop breakpoints).
 
 ## Deploy steps
 1. **Push this folder to a GitHub repo** (Vercel deploys from Git).

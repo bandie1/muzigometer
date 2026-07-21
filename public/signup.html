@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mizigo Meter - Register Node</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { --bg-dark:#04060e; --card-bg:rgba(9,15,36,0.6); --neon-purple:#8b5cf6; --neon-blue:#3b82f6; --text-main:#f8fafc; --text-muted:#64748b; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg-dark); background-image: radial-gradient(at 0% 0%, rgba(139,92,246,0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(59,130,246,0.15) 0px, transparent 50%); color:var(--text-main); font-family:'Plus Jakarta Sans',sans-serif; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+    .login-container { background:var(--card-bg); border:1px solid rgba(139,92,246,0.2); border-radius:28px; padding:50px 40px; width:100%; max-width:460px; backdrop-filter:blur(20px); box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+    .login-header { display:flex; justify-content:center; margin-bottom:32px; }
+    .brand-mizigo, .brand-meter { font-family:'Orbitron',sans-serif; font-weight:900; font-size:1.4rem; }
+    .brand-meter { color:var(--neon-blue); }
+    .brand-sub { display:block; font-size:0.6rem; letter-spacing:2px; color:var(--text-muted); font-weight:800; text-align:center; }
+    .form-group { margin-bottom:22px; }
+    .form-label { display:block; font-size:0.8rem; font-weight:700; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+    .form-input, .form-select { width:100%; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px; color:var(--text-main); font-family:inherit; font-size:0.95rem; }
+    .form-select { appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='%2364748b' stroke-width='2' fill='none' fill-rule='evenodd'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 16px center; padding-right:40px; }
+    .form-input:focus, .form-select:focus { outline:none; border-color:var(--neon-purple); box-shadow:0 0 15px rgba(139,92,246,0.25); }
+    .role-toggle { display:flex; gap:10px; margin-bottom:22px; }
+    .role-option { flex:1; text-align:center; padding:12px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.08); background:rgba(15,23,42,0.6); cursor:pointer; font-size:0.85rem; font-weight:700; color:var(--text-muted); user-select:none; }
+    .role-option.active { border-color:var(--neon-purple); color:var(--text-main); box-shadow:0 0 15px rgba(139,92,246,0.2); background:rgba(139,92,246,0.1); }
+    .room-count-group { max-height:0; overflow:hidden; opacity:0; margin-bottom:0; transition:max-height 0.25s ease, opacity 0.25s ease, margin-bottom 0.25s ease; }
+    .room-count-group.visible { max-height:120px; opacity:1; margin-bottom:22px; }
+    .btn-login { width:100%; background:linear-gradient(90deg,var(--neon-purple),var(--neon-blue)); border:none; border-radius:12px; color:white; padding:15px; font-size:1rem; font-weight:800; cursor:pointer; }
+    .btn-login:hover { box-shadow:0 0 25px rgba(139,92,246,0.45); }
+    .btn-login:disabled { opacity:0.6; cursor:not-allowed; }
+    .signup-link, .forgot-link { display:block; text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted); text-decoration:none; }
+    .signup-link span { color:var(--neon-blue); }
+    .error-alert, .success-alert { padding:12px 16px; border-radius:12px; font-size:0.85rem; margin-bottom:24px; display:none; }
+    .error-alert { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; }
+    .success-alert { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:#34d399; }
+
+    html { -webkit-text-size-adjust: 100%; }
+    body { padding: 16px; }
+    .login-container { padding: 40px 28px; }
+    @media (max-width: 480px) {
+      .login-container { padding: 32px 20px; border-radius: 20px; }
+      .login-header { margin-bottom: 24px; }
+      .brand-mizigo, .brand-meter { font-size: 1.15rem; }
+      .brand-sub { font-size: 0.55rem; letter-spacing: 1.5px; }
+      .form-group { margin-bottom: 16px; }
+      .form-input, .form-select { padding: 12px 14px; font-size: 0.9rem; }
+      .role-toggle { gap: 8px; margin-bottom: 18px; }
+      .role-option { padding: 10px 6px; font-size: 0.8rem; }
+      .btn-login { padding: 13px; font-size: 0.95rem; }
+    }
+    @media (max-width: 340px) {
+      .login-container { padding: 26px 16px; }
+      .brand-mizigo, .brand-meter { font-size: 1rem; }
+      .role-toggle { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <div>
+        <div style="text-align:center;"><span class="brand-mizigo">MIZIGO</span><span class="brand-meter">METER</span></div>
+        <span class="brand-sub">REGISTER NEW NODE</span>
+      </div>
+    </div>
+
+    <div class="error-alert" id="error-alert"></div>
+    <div class="success-alert" id="success-alert"></div>
+
+    <form id="signup-form">
+      <div class="form-group">
+        <label class="form-label">I am a</label>
+        <div class="role-toggle">
+          <div class="role-option active" data-role="tenant">Tenant</div>
+          <div class="role-option" data-role="landlord">Landlord</div>
+        </div>
+        <input type="hidden" id="role" value="tenant">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" id="username" required autocomplete="off">
+      </div>
+
+      <div class="form-group room-count-group" id="room-count-group">
+        <label class="form-label">Number of Rooms to Create</label>
+        <input class="form-input" type="number" id="num_rooms" min="1" step="1" placeholder="e.g. 4">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="password" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input class="form-input" type="password" id="confirm_password" required>
+      </div>
+
+      <button type="submit" class="btn-login" id="submit-btn">Register Node</button>
+    </form>
+
+    <a href="/login.html" class="signup-link">Already have an account? <span>Back to Login</span></a>
+  </div>
+
+  <script>
+    const roleOptions = document.querySelectorAll('.role-option');
+    const roleInput = document.getElementById('role');
+    const roomCountGroup = document.getElementById('room-count-group');
+
+    function setRole(role) {
+      roleInput.value = role;
+      roleOptions.forEach((el) => el.classList.toggle('active', el.dataset.role === role));
+      roomCountGroup.classList.toggle('visible', role === 'landlord');
+    }
+    roleOptions.forEach((el) => el.addEventListener('click', () => setRole(el.dataset.role)));
+
+    document.getElementById('signup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorBox = document.getElementById('error-alert');
+      const successBox = document.getElementById('success-alert');
+      const submitBtn = document.getElementById('submit-btn');
+      errorBox.style.display = 'none';
+      successBox.style.display = 'none';
+
+      const payload = {
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value,
+        confirm_password: document.getElementById('confirm_password').value,
+        role: roleInput.value,
+        num_rooms: document.getElementById('num_rooms').value,
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Registering…';
+
+      try {
+        const res = await fetch('/api/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorBox.textContent = data.error || 'Registration failed.';
+          errorBox.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Register Node';
+          return;
+        }
+
+        successBox.textContent = data.message || 'Registration successful!';
+        successBox.style.display = 'block';
+        submitBtn.textContent = 'Redirecting…';
+        setTimeout(() => { window.location.href = '/login.html'; }, 1800);
+      } catch (err) {
+        errorBox.textContent = 'Network error. Please try again.';
+        errorBox.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register Node';
+      }
+    });
+  </script>
+</body>
+</html>
