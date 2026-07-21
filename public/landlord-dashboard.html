@@ -70,17 +70,6 @@
     .btn-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--neon-green); }
     .btn-success:hover { background: var(--neon-green); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
     .action-group { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
-    .sensor-block { background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; }
-    .sensor-block-title { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 0.7rem; }
-    .sensor-block-title .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green); display: inline-block; margin-right: 0.4rem; }
-    .sensor-block-title.stale .live-dot { background: var(--neon-red); box-shadow: 0 0 6px var(--neon-red); }
-    .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem 0.5rem; }
-    .sensor-stat { display: flex; flex-direction: column; gap: 0.15rem; }
-    .sensor-stat .s-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
-    .sensor-stat .s-value { font-size: 0.95rem; font-weight: 700; }
-    .sensor-stat .s-value.v-volt { color: var(--neon-yellow); }
-    .sensor-stat .s-value.v-amp { color: var(--neon-cyan); }
-    .sensor-stat .s-value.v-watt { color: var(--neon-purple); }
     .summary-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
     .summary-stat { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 1rem 1.25rem; }
     .summary-stat .s-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
@@ -122,16 +111,12 @@
       .property-name { font-size: 1rem; word-break: break-word; }
       .metric-row { font-size: 0.82rem; flex-wrap: wrap; gap: 0.25rem; }
 
-      .sensor-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem 0.5rem; }
-      .sensor-stat .s-value { font-size: 0.88rem; }
-
       .action-group { flex-direction: column; gap: 0.6rem; }
       .btn { padding: 0.75rem 1rem; font-size: 0.85rem; }
     }
 
     @media (max-width: 400px) {
       .brand-text h1 { font-size: 0.9rem; }
-      .sensor-grid { grid-template-columns: 1fr 1fr; }
       .nav-actions { gap: 0.4rem; }
     }
   </style>
@@ -228,13 +213,6 @@
       }
       let html = '';
       for (const room of rooms) {
-        const t = room.telemetry || { conn_state: 'none' };
-        const isLive = t.conn_state === 'live';
-        const label = t.conn_state === 'live' ? 'Live'
-          : t.conn_state === 'stale' ? `Stale — ${new Date(t.logged_at).toLocaleTimeString()}`
-          : 'Not Connected';
-        const v = t.voltage || 0, c = t.current || 0, p = t.power || 0, en = t.energy || 0, fr = t.frequency || 0, pf = t.power_factor || 0;
-
         html += `<div class="property-card">
           <div class="property-header">
             <div>
@@ -247,17 +225,6 @@
           </div>
           <div class="metric-row"><span class="metric-label">Remaining Balance</span><span class="metric-value highlight">${fmt(room.remaining_units)} kWh</span></div>
           <div class="metric-row"><span class="metric-label">Total Amount Paid</span><span class="metric-value">${fmt(room.total_paid)} UGX</span></div>
-          <div class="sensor-block">
-            <div class="sensor-block-title${isLive ? '' : ' stale'}"><span><span class="live-dot"></span>PZEM Sensor Readings</span><span>${label}</span></div>
-            <div class="sensor-grid">
-              <div class="sensor-stat"><span class="s-label">Voltage</span><span class="s-value v-volt">${fmt(v)} V</span></div>
-              <div class="sensor-stat"><span class="s-label">Current</span><span class="s-value v-amp">${fmt(c, 3)} A</span></div>
-              <div class="sensor-stat"><span class="s-label">Power</span><span class="s-value v-watt">${fmt(p)} W</span></div>
-              <div class="sensor-stat"><span class="s-label">Energy</span><span class="s-value">${fmt(en, 3)} kWh</span></div>
-              <div class="sensor-stat"><span class="s-label">Frequency</span><span class="s-value">${fmt(fr)} Hz</span></div>
-              <div class="sensor-stat"><span class="s-label">Power Factor</span><span class="s-value">${fmt(pf, 2)}</span></div>
-            </div>
-          </div>
           <div class="action-group">
             <button class="btn btn-danger" onclick="if(confirm('Reset remaining units and total paid to 0.0 for ${esc(room.room_name)}?')) postAction('demo_reset', ${room.room_id})"><i class="fa-solid fa-rotate-left"></i> Reset</button>
             <button class="btn btn-success" onclick="postAction('demo_restore', ${room.room_id})"><i class="fa-solid fa-bolt"></i> Force Restore</button>

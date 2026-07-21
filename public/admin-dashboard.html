@@ -59,6 +59,7 @@
     .property-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
     .property-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
     .property-name { font-weight: 700; font-size: 1.1rem; }
+    .tenant-tag { font-size: 0.75rem; color: var(--text-muted); }
     .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
     .metric-label { color: var(--text-muted); }
     .metric-value { font-weight: 700; }
@@ -87,6 +88,36 @@
     .tenant-table td.amount { font-weight: 700; color: var(--neon-cyan); }
     .empty-state { text-align: center; padding: 2rem 0; color: var(--text-muted); }
     .empty-state i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+
+    /* ---------- Drawers (Landlord -> Rooms) ---------- */
+    .landlord-drawer { border: 1px solid var(--border-color); border-radius: 18px; margin-bottom: 1rem; overflow: hidden; background: rgba(255, 255, 255, 0.015); }
+    .landlord-drawer:last-child { margin-bottom: 0; }
+    .drawer-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.1rem 1.4rem; cursor: pointer; user-select: none; }
+    .drawer-header:hover { background: rgba(255, 255, 255, 0.02); }
+    .drawer-heading { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
+    .drawer-chevron { color: var(--text-muted); transition: transform 0.2s ease; flex-shrink: 0; }
+    .landlord-drawer.open .drawer-chevron { transform: rotate(90deg); color: var(--neon-purple); }
+    .drawer-landlord-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(157, 78, 221, 0.12); color: var(--neon-purple); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+    .drawer-name { font-weight: 700; font-size: 1.02rem; word-break: break-word; }
+    .drawer-sub { font-size: 0.75rem; color: var(--text-muted); }
+    .drawer-stats { display: flex; align-items: center; gap: 1.5rem; flex-shrink: 0; }
+    .drawer-stat { text-align: right; }
+    .drawer-stat .d-label { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700; }
+    .drawer-stat .d-value { font-size: 0.95rem; font-weight: 800; }
+    .drawer-stat .d-value.cyan { color: var(--neon-cyan); }
+    .drawer-body { max-height: 0; overflow: hidden; transition: max-height 0.35s ease; }
+    .landlord-drawer.open .drawer-body { max-height: 6000px; }
+    .drawer-body-inner { padding: 0 1.4rem 1.4rem; border-top: 1px solid var(--border-color); }
+    .drawer-body-inner .properties-grid { margin-top: 1.25rem; }
+
+    /* ---------- Pending requests ---------- */
+    .pending-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border: 1px solid rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.06); border-radius: 14px; margin-bottom: 0.85rem; flex-wrap: wrap; }
+    .pending-row:last-child { margin-bottom: 0; }
+    .pending-info { min-width: 0; }
+    .pending-info .p-title { font-weight: 700; font-size: 0.95rem; }
+    .pending-info .p-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem; }
+    .pending-actions { display: flex; gap: 0.6rem; flex-shrink: 0; }
+    .pending-actions .btn { width: auto; padding: 0.55rem 1rem; }
 
     /* ---------- Responsive ---------- */
     html { -webkit-text-size-adjust: 100%; }
@@ -127,12 +158,23 @@
       .btn { padding: 0.75rem 1rem; font-size: 0.85rem; }
 
       .tenant-table th, .tenant-table td { padding: 0.7rem 0.75rem; font-size: 0.82rem; }
+
+      .drawer-header { padding: 0.9rem 1rem; flex-wrap: wrap; }
+      .drawer-heading { flex: 1 1 100%; }
+      .drawer-stats { flex: 1 1 100%; justify-content: space-between; gap: 0.75rem; }
+      .drawer-body-inner { padding: 0 1rem 1.1rem; }
+      .drawer-stat { text-align: left; }
+
+      .pending-row { flex-direction: column; align-items: stretch; }
+      .pending-actions { width: 100%; }
+      .pending-actions .btn { flex: 1; }
     }
 
     @media (max-width: 400px) {
       .brand-text h1 { font-size: 0.9rem; }
       .sensor-grid { grid-template-columns: 1fr 1fr; }
       .nav-actions { gap: 0.4rem; }
+      .drawer-stats { flex-wrap: wrap; }
     }
   </style>
 </head>
@@ -159,18 +201,14 @@
   </nav>
 
   <div class="dashboard-container">
-    <div class="panel-card">
-      <div class="panel-title"><i class="fa-solid fa-users-gear"></i> Landlords Overview</div>
-      <div id="landlords-panel"><div class="empty-state">Loading…</div></div>
+    <div class="panel-card" id="pending-panel" style="display:none;">
+      <div class="panel-title"><i class="fa-solid fa-hourglass-half"></i> Pending Top-Up Requests</div>
+      <div id="pending-requests"></div>
     </div>
 
-    <div id="tenants-by-landlord"></div>
-
     <div class="panel-card">
-      <div class="panel-title"><i class="fa-solid fa-house-laptop"></i> All Property Meter Nodes (System-Wide)</div>
-      <div class="properties-grid" id="properties-grid">
-        <div class="empty-state" style="grid-column: 1 / -1;">Loading…</div>
-      </div>
+      <div class="panel-title"><i class="fa-solid fa-users-gear"></i> Landlords &amp; Properties</div>
+      <div id="landlords-drawers"><div class="empty-state">Loading…</div></div>
     </div>
   </div>
 
@@ -200,6 +238,9 @@
     const fmt = (n, d = 1) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
+    // Track which landlord drawers are open across re-renders (poll every 4s).
+    const openDrawers = new Set();
+
     async function postAction(action, room_id) {
       const res = await fetch('/api/dashboard/admin-action', {
         method: 'POST',
@@ -210,92 +251,126 @@
       loadDashboard(); // refresh immediately after an action
     }
 
-    function renderLandlords(landlords, tenantsByLandlord) {
-      const panel = document.getElementById('landlords-panel');
-      if (!landlords.length) {
-        panel.innerHTML = '<div class="empty-state"><i class="fa-solid fa-folder-open"></i>No landlords registered yet.</div>';
-        return;
-      }
-      let rows = '';
-      for (const lord of landlords) {
-        const tenants = tenantsByLandlord[lord.user_id] || [];
-        const total = tenants.reduce((sum, t) => sum + parseFloat(t.total_paid || 0), 0);
-        rows += `<tr><td>${esc(lord.username)}</td><td>${tenants.length}</td><td class="amount">${fmt(total)} UGX</td></tr>`;
-      }
-      panel.innerHTML = `<div class="table-scroll"><table class="tenant-table"><thead><tr><th>Landlord</th><th>Tenants Assigned</th><th>Total Collected</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    async function decideRequest(id, decision) {
+      const res = await fetch('/api/dashboard/approve-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request_id: id, decision }),
+      });
+      if (!res.ok) { alert('Action failed.'); return; }
+      loadDashboard();
     }
 
-    function renderTenantsByLandlord(landlords, tenantsByLandlord) {
-      const container = document.getElementById('tenants-by-landlord');
+    function renderPendingRequests(requests) {
+      const panel = document.getElementById('pending-panel');
+      const container = document.getElementById('pending-requests');
+      if (!requests.length) {
+        panel.style.display = 'none';
+        container.innerHTML = '';
+        return;
+      }
+      panel.style.display = 'block';
       let html = '';
-      for (const lord of landlords) {
-        const tenants = tenantsByLandlord[lord.user_id] || [];
-        if (!tenants.length) continue;
-        let rows = '';
-        for (const t of tenants) {
-          rows += `<tr>
-            <td>${esc(t.tenant_name)}</td>
-            <td>${esc(t.room_name)}</td>
-            <td>${fmt(t.remaining_units)} kWh</td>
-            <td>${fmt(t.last_amount_paid)} UGX</td>
-            <td class="amount">${fmt(t.total_paid)} UGX</td>
-          </tr>`;
-        }
-        html += `<div class="panel-card">
-          <div class="panel-title"><i class="fa-solid fa-sack-dollar"></i> Tenants Under ${esc(lord.username)}</div>
-          <div class="table-scroll">
-          <table class="tenant-table">
-            <thead><tr><th>Tenant</th><th>Room</th><th>Units Remaining</th><th>Amount Paid So Far</th><th>Total Amount Paid</th></tr></thead>
-            <tbody>${rows}</tbody>
-          </table>
+      for (const r of requests) {
+        html += `<div class="pending-row">
+          <div class="pending-info">
+            <div class="p-title">${esc(r.tenant_name)} — ${esc(r.room_name)} <span style="color:var(--text-muted); font-weight:400;">(under ${esc(r.landlord_name)})</span></div>
+            <div class="p-sub">Requested ${fmt(r.amount, 0)} UGX &nbsp;→&nbsp; ${fmt(r.units, 2)} kWh &nbsp;·&nbsp; ${new Date(r.created_at).toLocaleString()}</div>
+          </div>
+          <div class="pending-actions">
+            <button class="btn btn-success" onclick="decideRequest(${r.id}, 'approve')"><i class="fa-solid fa-check"></i> Approve</button>
+            <button class="btn btn-danger" onclick="decideRequest(${r.id}, 'reject')"><i class="fa-solid fa-xmark"></i> Reject</button>
           </div>
         </div>`;
       }
       container.innerHTML = html;
     }
 
-    function renderRooms(rooms) {
-      const grid = document.getElementById('properties-grid');
-      if (!rooms.length) {
-        grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-folder-open"></i>No active property rooms logged.</div>';
+    function renderRoomCard(room) {
+      const t = room.telemetry || { conn_state: 'none' };
+      const isLive = t.conn_state === 'live';
+      const label = t.conn_state === 'live' ? 'Live'
+        : t.conn_state === 'stale' ? `Stale — ${new Date(t.logged_at).toLocaleTimeString()}`
+        : 'Not Connected';
+      const v = t.voltage || 0, c = t.current || 0, p = t.power || 0, en = t.energy || 0, fr = t.frequency || 0, pf = t.power_factor || 0;
+
+      return `<div class="property-card">
+        <div class="property-header">
+          <div>
+            <div class="property-name">${esc(room.room_name)}</div>
+            <div class="tenant-tag">${room.tenant_name ? 'Tenant: ' + esc(room.tenant_name) : 'Vacant'}</div>
+          </div>
+          ${room.relay_status == 1
+            ? '<span class="status-badge active"><i class="fa-solid fa-circle-play"></i> ONLINE</span>'
+            : '<span class="status-badge inactive"><i class="fa-solid fa-circle-stop"></i> CUT-OFF</span>'}
+        </div>
+        <div class="metric-row"><span class="metric-label">Remaining Balance</span><span class="metric-value highlight">${fmt(room.remaining_units)} kWh</span></div>
+        <div class="metric-row"><span class="metric-label">Total Amount Paid</span><span class="metric-value">${fmt(room.total_paid)} UGX</span></div>
+        <div class="sensor-block">
+          <div class="sensor-block-title${isLive ? '' : ' stale'}"><span><span class="live-dot"></span>PZEM Sensor Readings</span><span>${label}</span></div>
+          <div class="sensor-grid">
+            <div class="sensor-stat"><span class="s-label">Voltage</span><span class="s-value v-volt">${fmt(v)} V</span></div>
+            <div class="sensor-stat"><span class="s-label">Current</span><span class="s-value v-amp">${fmt(c, 3)} A</span></div>
+            <div class="sensor-stat"><span class="s-label">Power</span><span class="s-value v-watt">${fmt(p)} W</span></div>
+            <div class="sensor-stat"><span class="s-label">Energy</span><span class="s-value">${fmt(en, 3)} kWh</span></div>
+            <div class="sensor-stat"><span class="s-label">Frequency</span><span class="s-value">${fmt(fr)} Hz</span></div>
+            <div class="sensor-stat"><span class="s-label">Power Factor</span><span class="s-value">${fmt(pf, 2)}</span></div>
+          </div>
+        </div>
+        <div class="action-group">
+          <button class="btn btn-danger" onclick="if(confirm('Reset remaining units and total paid to 0.0 for ${esc(room.room_name)}?')) postAction('demo_reset', ${room.room_id})"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+          <button class="btn btn-success" onclick="postAction('demo_restore', ${room.room_id})"><i class="fa-solid fa-bolt"></i> Force Restore</button>
+        </div>
+      </div>`;
+    }
+
+    function toggleDrawer(landlordId) {
+      const el = document.getElementById('drawer-' + landlordId);
+      if (!el) return;
+      const isOpen = el.classList.toggle('open');
+      if (isOpen) openDrawers.add(landlordId); else openDrawers.delete(landlordId);
+    }
+
+    function renderLandlordDrawers(landlords, tenantsByLandlord, roomsByLandlord) {
+      const container = document.getElementById('landlords-drawers');
+      if (!landlords.length) {
+        container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-folder-open"></i>No landlords registered yet.</div>';
         return;
       }
-      let html = '';
-      for (const room of rooms) {
-        const t = room.telemetry || { conn_state: 'none' };
-        const isLive = t.conn_state === 'live';
-        const label = t.conn_state === 'live' ? 'Live'
-          : t.conn_state === 'stale' ? `Stale — ${new Date(t.logged_at).toLocaleTimeString()}`
-          : 'Not Connected';
-        const v = t.voltage || 0, c = t.current || 0, p = t.power || 0, en = t.energy || 0, fr = t.frequency || 0, pf = t.power_factor || 0;
 
-        html += `<div class="property-card">
-          <div class="property-header">
-            <div class="property-name">${esc(room.room_name)}</div>
-            ${room.relay_status == 1
-              ? '<span class="status-badge active"><i class="fa-solid fa-circle-play"></i> ONLINE</span>'
-              : '<span class="status-badge inactive"><i class="fa-solid fa-circle-stop"></i> CUT-OFF</span>'}
-          </div>
-          <div class="metric-row"><span class="metric-label">Remaining Balance</span><span class="metric-value highlight">${fmt(room.remaining_units)} kWh</span></div>
-          <div class="metric-row"><span class="metric-label">Total Amount Paid</span><span class="metric-value">${fmt(room.total_paid)} UGX</span></div>
-          <div class="sensor-block">
-            <div class="sensor-block-title${isLive ? '' : ' stale'}"><span><span class="live-dot"></span>PZEM Sensor Readings</span><span>${label}</span></div>
-            <div class="sensor-grid">
-              <div class="sensor-stat"><span class="s-label">Voltage</span><span class="s-value v-volt">${fmt(v)} V</span></div>
-              <div class="sensor-stat"><span class="s-label">Current</span><span class="s-value v-amp">${fmt(c, 3)} A</span></div>
-              <div class="sensor-stat"><span class="s-label">Power</span><span class="s-value v-watt">${fmt(p)} W</span></div>
-              <div class="sensor-stat"><span class="s-label">Energy</span><span class="s-value">${fmt(en, 3)} kWh</span></div>
-              <div class="sensor-stat"><span class="s-label">Frequency</span><span class="s-value">${fmt(fr)} Hz</span></div>
-              <div class="sensor-stat"><span class="s-label">Power Factor</span><span class="s-value">${fmt(pf, 2)}</span></div>
+      let html = '';
+      for (const lord of landlords) {
+        const tenants = tenantsByLandlord[lord.user_id] || [];
+        const rooms = roomsByLandlord[lord.user_id] || [];
+        const total = tenants.reduce((sum, t) => sum + parseFloat(t.total_paid || 0), 0);
+        const isOpen = openDrawers.has(lord.user_id);
+
+        const roomCards = rooms.length
+          ? rooms.map(renderRoomCard).join('')
+          : '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-folder-open"></i>No property rooms registered for this landlord yet.</div>';
+
+        html += `<div class="landlord-drawer${isOpen ? ' open' : ''}" id="drawer-${lord.user_id}">
+          <div class="drawer-header" onclick="toggleDrawer(${lord.user_id})">
+            <div class="drawer-heading">
+              <i class="fa-solid fa-chevron-right drawer-chevron"></i>
+              <div class="drawer-landlord-icon"><i class="fa-solid fa-user-tie"></i></div>
+              <div>
+                <div class="drawer-name">${esc(lord.username)}</div>
+                <div class="drawer-sub">${rooms.length} room${rooms.length === 1 ? '' : 's'} · ${tenants.length} tenant${tenants.length === 1 ? '' : 's'}</div>
+              </div>
+            </div>
+            <div class="drawer-stats">
+              <div class="drawer-stat"><div class="d-label">Total Collected</div><div class="d-value cyan">${fmt(total)} UGX</div></div>
             </div>
           </div>
-          <div class="action-group">
-            <button class="btn btn-danger" onclick="if(confirm('Reset remaining units and total paid to 0.0 for ${esc(room.room_name)}?')) postAction('demo_reset', ${room.room_id})"><i class="fa-solid fa-rotate-left"></i> Reset</button>
-            <button class="btn btn-success" onclick="postAction('demo_restore', ${room.room_id})"><i class="fa-solid fa-bolt"></i> Force Restore</button>
+          <div class="drawer-body">
+            <div class="drawer-body-inner">
+              <div class="properties-grid">${roomCards}</div>
+            </div>
           </div>
         </div>`;
       }
-      grid.innerHTML = html;
+      container.innerHTML = html;
     }
 
     async function loadDashboard() {
@@ -303,9 +378,17 @@
         const res = await fetch('/api/dashboard/admin');
         if (res.status === 401) { window.location.href = '/login.html'; return; }
         const data = await res.json();
-        renderLandlords(data.landlords, data.tenants_by_landlord);
-        renderTenantsByLandlord(data.landlords, data.tenants_by_landlord);
-        renderRooms(data.rooms);
+
+        renderPendingRequests(data.pending_requests || []);
+
+        // Group rooms by landlord so each drawer only needs its own slice.
+        const roomsByLandlord = {};
+        for (const room of data.rooms || []) {
+          if (!roomsByLandlord[room.landlord_id]) roomsByLandlord[room.landlord_id] = [];
+          roomsByLandlord[room.landlord_id].push(room);
+        }
+
+        renderLandlordDrawers(data.landlords, data.tenants_by_landlord, roomsByLandlord);
       } catch (err) {
         console.error('Failed to load dashboard', err);
       }

@@ -50,31 +50,44 @@
     .dashboard-container { max-width: 800px; margin: 2rem auto; padding: 0 1.5rem; }
     .panel-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 2rem; backdrop-filter: blur(16px); box-shadow: var(--shadow-md), var(--glass-glow); margin-bottom: 2rem; position: relative; overflow: hidden; }
     .panel-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to right, var(--neon-purple), var(--neon-cyan)); }
-    .panel-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
-    .panel-title i { color: var(--neon-purple); }
     .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .status-badge.active { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--neon-green); }
     .status-badge.inactive { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--neon-red); }
-    .property-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; }
+    .property-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem; }
     .property-name { font-weight: 700; font-size: 1.3rem; }
     .balance-hero { text-align: center; padding: 1.5rem 1rem; background: rgba(6, 182, 212, 0.06); border: 1px solid rgba(6, 182, 212, 0.15); border-radius: 18px; margin-bottom: 1.5rem; }
     .balance-hero .b-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; }
     .balance-hero .b-value { font-size: 2.4rem; font-weight: 800; color: var(--neon-cyan); margin-top: 0.4rem; word-break: break-word; }
-    .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border-color); }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; padding: 0.6rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.25rem; }
     .metric-row:last-child { border-bottom: none; }
     .metric-label { color: var(--text-muted); }
     .metric-value { font-weight: 700; }
-    .sensor-block { background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-color); border-radius: 12px; padding: 1rem 1.1rem; margin-top: 1.5rem; }
-    .sensor-block-title { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 0.9rem; }
-    .sensor-block-title .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green); display: inline-block; margin-right: 0.4rem; }
-    .sensor-block-title.stale .live-dot { background: var(--neon-red); box-shadow: 0 0 6px var(--neon-red); }
-    .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem 0.75rem; }
-    .sensor-stat { display: flex; flex-direction: column; gap: 0.2rem; }
-    .sensor-stat .s-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
-    .sensor-stat .s-value { font-size: 1.05rem; font-weight: 700; }
-    .sensor-stat .s-value.v-volt { color: var(--neon-yellow); }
-    .sensor-stat .s-value.v-amp { color: var(--neon-cyan); }
-    .sensor-stat .s-value.v-watt { color: var(--neon-purple); }
+    .buy-btn { width: 100%; margin-top: 1.5rem; background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)); border: none; border-radius: 14px; color: white; padding: 1rem; font-size: 1rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-family: var(--font-stack); }
+    .buy-btn:hover { box-shadow: 0 4px 20px rgba(157, 78, 221, 0.4); }
+    .buy-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .request-banner { display: flex; align-items: center; gap: 0.75rem; padding: 0.9rem 1.1rem; border-radius: 14px; font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .request-banner.pending { background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.25); color: var(--neon-yellow); }
+    .request-banner.approved { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: var(--neon-green); }
+    .request-banner.rejected { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--neon-red); }
+    .request-banner i { font-size: 1.1rem; flex-shrink: 0; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 22px; padding: 2rem; width: 100%; max-width: 420px; backdrop-filter: blur(20px); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+    .modal-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.6rem; }
+    .modal-title i { color: var(--neon-purple); }
+    .modal-desc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
+    .form-label { display: block; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+    .form-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; padding: 13px 15px; color: var(--text-main); font-family: inherit; font-size: 0.95rem; margin-bottom: 1rem; }
+    .form-input:focus { outline: none; border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(139,92,246,0.2); }
+    .estimate-line { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.25rem; }
+    .estimate-line span { color: var(--neon-cyan); font-weight: 700; }
+    .modal-actions { display: flex; gap: 0.75rem; }
+    .modal-actions .btn { flex: 1; padding: 0.8rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: none; font-family: var(--font-stack); }
+    .btn-cancel { background: rgba(255,255,255,0.05); color: var(--text-main); }
+    .btn-confirm { background: linear-gradient(90deg, var(--neon-purple), var(--neon-cyan)); color: white; }
+    .modal-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #f87171; padding: 10px 14px; border-radius: 10px; font-size: 0.8rem; margin-bottom: 1rem; display: none; }
     .empty-state { text-align: center; padding: 2rem 0; color: var(--text-muted); }
     .empty-state i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
 
@@ -95,22 +108,18 @@
 
       .dashboard-container { margin: 1.25rem auto; padding: 0 0.85rem; }
       .panel-card { padding: 1.25rem 1rem; border-radius: 18px; margin-bottom: 1.25rem; }
-      .panel-title { font-size: 1.1rem; gap: 0.5rem; flex-wrap: wrap; }
 
-      .property-header { flex-wrap: wrap; gap: 0.5rem; }
       .property-name { font-size: 1.1rem; word-break: break-word; }
       .balance-hero .b-value { font-size: 1.9rem; }
-      .metric-row { font-size: 0.85rem; flex-wrap: wrap; gap: 0.25rem; }
-
-      .sensor-grid { grid-template-columns: repeat(2, 1fr); gap: 0.85rem 0.5rem; }
-      .sensor-stat .s-value { font-size: 0.9rem; }
+      .metric-row { font-size: 0.85rem; }
+      .modal-box { padding: 1.5rem; border-radius: 18px; }
     }
 
     @media (max-width: 400px) {
       .brand-text h1 { font-size: 0.9rem; }
       .balance-hero .b-value { font-size: 1.6rem; }
-      .sensor-grid { grid-template-columns: 1fr 1fr; }
       .nav-actions { gap: 0.4rem; }
+      .modal-actions { flex-direction: column; }
     }
   </style>
 </head>
@@ -142,6 +151,22 @@
     </div>
   </div>
 
+  <!-- Buy Units modal -->
+  <div class="modal-overlay" id="buy-modal">
+    <div class="modal-box">
+      <div class="modal-title"><i class="fa-solid fa-bolt"></i> Buy Units</div>
+      <p class="modal-desc">Enter the amount you want to pay. We'll open your phone's dialer with the USSD payment code — complete the payment there, then your request goes to the admin for approval.</p>
+      <div class="modal-error" id="modal-error"></div>
+      <label class="form-label">Amount (UGX)</label>
+      <input type="number" id="buy-amount" class="form-input" min="500" step="100" placeholder="e.g. 5000">
+      <div class="estimate-line">Estimated units: <span id="estimate-units">0.00 kWh</span> (@ 700 UGX/kWh)</div>
+      <div class="modal-actions">
+        <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
+        <button class="btn btn-confirm" id="modal-confirm">Dial &amp; Submit</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ---------- Theme ----------
     function applySavedTheme() {
@@ -168,18 +193,32 @@
     const fmt = (n, d = 1) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-    function renderRoom(room) {
+    // ---------- USSD payment template ----------
+    // Adjust this short-code to match your mobile-money aggregator's actual
+    // merchant-payment USSD string. {amount} is replaced with the entered value.
+    const USSD_TEMPLATE = '*185*9*{amount}#';
+    const UGX_PER_KWH = 700;
+
+    let latestRoom = null;
+
+    function renderRoom(room, latestRequest) {
       const container = document.getElementById('dashboard-container');
       if (!room) {
         container.innerHTML = `<div class="panel-card"><div class="empty-state"><i class="fa-solid fa-house-circle-xmark"></i>No room is currently assigned to your account. Please contact your landlord.</div></div>`;
         return;
       }
-      const t = room.telemetry || { conn_state: 'none' };
-      const isLive = t.conn_state === 'live';
-      const label = t.conn_state === 'live' ? 'Live'
-        : t.conn_state === 'stale' ? `Stale — ${new Date(t.logged_at).toLocaleTimeString()}`
-        : 'Not Connected';
-      const v = t.voltage || 0, c = t.current || 0, p = t.power || 0, en = t.energy || 0, fr = t.frequency || 0, pf = t.power_factor || 0;
+      latestRoom = room;
+
+      let bannerHtml = '';
+      if (latestRequest) {
+        if (latestRequest.status === 'pending') {
+          bannerHtml = `<div class="request-banner pending"><i class="fa-solid fa-hourglass-half"></i>Top-up request of ${fmt(latestRequest.amount, 0)} UGX (~${fmt(latestRequest.units, 2)} kWh) is awaiting admin approval.</div>`;
+        } else if (latestRequest.status === 'approved') {
+          bannerHtml = `<div class="request-banner approved"><i class="fa-solid fa-circle-check"></i>Your last top-up of ${fmt(latestRequest.amount, 0)} UGX (${fmt(latestRequest.units, 2)} kWh) was approved and added to your balance.</div>`;
+        } else if (latestRequest.status === 'rejected') {
+          bannerHtml = `<div class="request-banner rejected"><i class="fa-solid fa-circle-xmark"></i>Your last top-up request of ${fmt(latestRequest.amount, 0)} UGX was rejected. Contact your landlord or admin.</div>`;
+        }
+      }
 
       container.innerHTML = `<div class="panel-card">
         <div class="property-header">
@@ -189,6 +228,8 @@
             : '<span class="status-badge inactive"><i class="fa-solid fa-circle-stop"></i> CUT-OFF</span>'}
         </div>
 
+        ${bannerHtml}
+
         <div class="balance-hero">
           <div class="b-label">Remaining Balance</div>
           <div class="b-value">${fmt(room.remaining_units)} kWh</div>
@@ -197,26 +238,87 @@
         <div class="metric-row"><span class="metric-label">Last Amount Paid</span><span class="metric-value">${fmt(room.last_amount_paid)} UGX</span></div>
         <div class="metric-row"><span class="metric-label">Total Amount Paid</span><span class="metric-value">${fmt(room.total_paid)} UGX</span></div>
 
-        <div class="sensor-block">
-          <div class="sensor-block-title${isLive ? '' : ' stale'}"><span><span class="live-dot"></span>PZEM Sensor Readings</span><span>${label}</span></div>
-          <div class="sensor-grid">
-            <div class="sensor-stat"><span class="s-label">Voltage</span><span class="s-value v-volt">${fmt(v)} V</span></div>
-            <div class="sensor-stat"><span class="s-label">Current</span><span class="s-value v-amp">${fmt(c, 3)} A</span></div>
-            <div class="sensor-stat"><span class="s-label">Power</span><span class="s-value v-watt">${fmt(p)} W</span></div>
-            <div class="sensor-stat"><span class="s-label">Energy</span><span class="s-value">${fmt(en, 3)} kWh</span></div>
-            <div class="sensor-stat"><span class="s-label">Frequency</span><span class="s-value">${fmt(fr)} Hz</span></div>
-            <div class="sensor-stat"><span class="s-label">Power Factor</span><span class="s-value">${fmt(pf, 2)}</span></div>
-          </div>
-        </div>
+        <button class="buy-btn" id="open-buy-modal"><i class="fa-solid fa-bolt"></i> Buy Units</button>
       </div>`;
+
+      document.getElementById('open-buy-modal').addEventListener('click', openBuyModal);
     }
+
+    // ---------- Buy Units modal ----------
+    const buyModal = document.getElementById('buy-modal');
+    const buyAmountInput = document.getElementById('buy-amount');
+    const estimateUnits = document.getElementById('estimate-units');
+    const modalError = document.getElementById('modal-error');
+    const modalConfirm = document.getElementById('modal-confirm');
+
+    function openBuyModal() {
+      buyAmountInput.value = '';
+      estimateUnits.textContent = '0.00 kWh';
+      modalError.style.display = 'none';
+      modalConfirm.disabled = false;
+      modalConfirm.textContent = 'Dial & Submit';
+      buyModal.classList.add('open');
+      buyAmountInput.focus();
+    }
+    function closeBuyModal() { buyModal.classList.remove('open'); }
+
+    buyAmountInput.addEventListener('input', () => {
+      const amt = parseFloat(buyAmountInput.value) || 0;
+      estimateUnits.textContent = fmt(amt / UGX_PER_KWH, 2) + ' kWh';
+    });
+
+    document.getElementById('modal-cancel').addEventListener('click', closeBuyModal);
+    buyModal.addEventListener('click', (e) => { if (e.target === buyModal) closeBuyModal(); });
+
+    modalConfirm.addEventListener('click', async () => {
+      const amount = parseFloat(buyAmountInput.value);
+      modalError.style.display = 'none';
+      if (!amount || amount <= 0) {
+        modalError.textContent = 'Enter a valid amount.';
+        modalError.style.display = 'block';
+        return;
+      }
+
+      modalConfirm.disabled = true;
+      modalConfirm.textContent = 'Submitting…';
+
+      const ussdCode = USSD_TEMPLATE.replace('{amount}', Math.round(amount));
+
+      try {
+        const res = await fetch('/api/dashboard/buy-units', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount, ussd_reference: ussdCode }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          modalError.textContent = data.error || 'Request failed.';
+          modalError.style.display = 'block';
+          modalConfirm.disabled = false;
+          modalConfirm.textContent = 'Dial & Submit';
+          return;
+        }
+
+        // Open the phone dialer with the USSD code pre-filled.
+        window.location.href = 'tel:' + encodeURIComponent(ussdCode);
+
+        closeBuyModal();
+        loadDashboard();
+      } catch (err) {
+        modalError.textContent = 'Network error. Please try again.';
+        modalError.style.display = 'block';
+        modalConfirm.disabled = false;
+        modalConfirm.textContent = 'Dial & Submit';
+      }
+    });
 
     async function loadDashboard() {
       try {
         const res = await fetch('/api/dashboard/tenant');
         if (res.status === 401) { window.location.href = '/login.html'; return; }
         const data = await res.json();
-        renderRoom(data.room);
+        renderRoom(data.room, data.latest_request);
       } catch (err) {
         console.error('Failed to load dashboard', err);
       }

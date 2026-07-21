@@ -24,9 +24,11 @@ api/
   dashboard/
     admin.js             -> GET, JSON data for admin dashboard (requires admin session)
     admin-action.js       -> POST, handles Reset/Force Restore buttons (admin, any room)
-    landlord.js            -> GET, JSON data scoped to the logged-in landlord's own rooms
+    landlord.js            -> GET, JSON data scoped to the logged-in landlord's own rooms (no PZEM)
     landlord-action.js     -> POST, Reset/Force Restore, scoped to the landlord's own rooms
-    tenant.js               -> GET, read-only JSON for the logged-in tenant's own room
+    tenant.js               -> GET, read-only JSON for the logged-in tenant's own room (no PZEM)
+    buy-units.js            -> POST, tenant submits a top-up ("Buy Units") request
+    approve-request.js      -> POST, admin approves/rejects a pending top-up request
 lib/
   db.js                  -> shared Postgres pool
   auth.js                -> JWT cookie helpers
@@ -34,12 +36,62 @@ public/
   login.html
   signup.html             -> landlord/tenant registration form
   forgot-password.html    -> username + new password reset form
-  admin-dashboard.html    -> full worked example (system-wide view)
+  admin-dashboard.html    -> landlords grouped into collapsible drawers, each holding its
+                             rooms with LIVE PZEM readings (admin-only), plus a pending
+                             top-up approvals panel
   landlord-dashboard.html -> portfolio summary + own rooms, with Reset/Force Restore
-  tenant-dashboard.html   -> read-only view of the tenant's own room + live sensor readings
+                             (no PZEM readings — admin dashboard only)
+  tenant-dashboard.html   -> balance, payment history, and a "Buy Units" flow
+                             (no PZEM readings — admin dashboard only)
 ```
 
 All dashboards and forms are fully responsive (mobile, tablet, desktop breakpoints).
+
+## Behavior notes
+
+- **PZEM sensor readings are admin-only.** The landlord and tenant dashboards/APIs no
+  longer fetch or display live voltage/current/power/etc — only balance, payment, and
+  online/cut-off status. Only `api/dashboard/admin.js` queries `energy_logs`.
+- **Readings are strictly live, never stale/stored.** `admin.js` computes `conn_state`
+  (`live` within 15s / `stale` / `none`) exactly as before, but now whenever a room isn't
+  actively reporting (`stale` or `none`), every numeric PZEM value is zeroed out in the
+  API response rather than showing the last value written to `energy_logs`.
+- **Buy Units flow.** A tenant taps "Buy Units", enters a UGX amount, and the page (a)
+  calls `POST /api/dashboard/buy-units` to create a `pending` row in a new
+  `purchase_requests` table, and (b) opens the phone's dialer via a `tel:` link with a
+  USSD payment code (`USSD_TEMPLATE` in `tenant-dashboard.html` — replace with your real
+  mobile-money short-code). The admin dashboard shows all pending requests up top;
+  approving one adds the stored `units`/`amount` to that room's `remaining_units` /
+  `total_paid` and turns the relay back on; rejecting just marks it `rejected`. The
+  tariff (`UGX_PER_KWH`, currently 700) lives in `api/dashboard/buy-units.js` — adjust it
+  there to match your pricing.
+- **Drawers on the admin dashboard.** Landlords render as collapsible drawers (closed by
+  default); expanding one reveals only that landlord's rooms/tenants, so the page no
+  longer shows one long flat list. Open/closed state persists across the 4s poll.
+- **Sync.** All three dashboards poll their respective (now role-scoped) endpoints every
+  4 seconds, so admin actions (reset/restore/approve) and tenant top-ups show up on the
+  other dashboards within one poll cycle without a manual refresh.
+
+## Required SQL
+
+Run this in the Supabase SQL editor in addition to the `energy_logs` constraints
+mentioned below — it backs the new "Buy Units" approval flow:
+
+```sql
+CREATE TABLE IF NOT EXISTS purchase_requests (
+  id BIGSERIAL PRIMARY KEY,
+  room_id INTEGER NOT NULL REFERENCES rooms(room_id),
+  tenant_id INTEGER NOT NULL REFERENCES users(id),
+  amount NUMERIC NOT NULL,
+  units NUMERIC NOT NULL,
+  ussd_reference TEXT,
+  status TEXT NOT NULL DEFAULT 'pending', -- 'pending' | 'approved' | 'rejected'
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  decided_at TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS idx_purchase_requests_room ON purchase_requests(room_id);
+CREATE INDEX IF NOT EXISTS idx_purchase_requests_status ON purchase_requests(status);
+```
 
 ## Deploy steps
 1. **Push this folder to a GitHub repo** (Vercel deploys from Git).

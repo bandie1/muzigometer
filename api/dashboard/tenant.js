@@ -1,33 +1,31 @@
 const pool = require('../../lib/db');
 const { requireRole } = require('../../lib/auth');
 
+// NOTE: PZEM sensor readings are intentionally NOT included here — live
+// telemetry is shown on the admin dashboard only.
 module.exports = async (req, res) => {
   const session = requireRole(req, res, 'tenant');
   if (!session) return; // requireRole already sent a 401
 
   try {
     if (!session.room_id) {
-      return res.status(200).json({ room: null });
+      return res.status(200).json({ room: null, latest_request: null });
     }
 
     const roomRes = await pool.query('SELECT * FROM rooms WHERE room_id = $1', [session.room_id]);
-    const room = roomRes.rows[0];
-    if (!room) {
-      return res.status(200).json({ room: null });
-    }
+    const room = roomRes.rows[0] || null;
 
-    const telemetryRes = await pool.query(
-      'SELECT * FROM energy_logs WHERE room_id = $1 ORDER BY logged_at DESC LIMIT 1',
+    const requestRes = await pool.query(
+      `SELECT id, amount, units, status, created_at, decided_at
+       FROM purchase_requests
+       WHERE room_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
       [session.room_id]
     );
-    const t = telemetryRes.rows[0];
-    let telemetry = { conn_state: 'none' };
-    if (t) {
-      const ageSeconds = t.logged_at ? (Date.now() - new Date(t.logged_at).getTime()) / 1000 : Infinity;
-      telemetry = { ...t, conn_state: ageSeconds > 15 ? 'stale' : 'live' };
-    }
+    const latestRequest = requestRes.rows[0] || null;
 
-    return res.status(200).json({ room: { ...room, telemetry } });
+    return res.status(200).json({ room, latest_request: latestRequest });
   } catch (err) {
     return res.status(500).json({ error: 'Database error: ' + err.message });
   }
