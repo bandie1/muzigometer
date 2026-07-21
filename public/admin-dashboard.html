@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mizigo Meter — Admin Command Terminal</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-main: #0a0d14;
+      --bg-card: rgba(20, 24, 35, 0.65);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --neon-purple: #9d4edd;
+      --neon-cyan: #06b6d4;
+      --neon-green: #10b981;
+      --neon-red: #ef4444;
+      --neon-yellow: #f59e0b;
+      --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.3);
+      --glass-glow: 0 8px 32px 0 rgba(157, 78, 221, 0.1);
+      --font-stack: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+    .light-theme {
+      --bg-main: #f8fafc;
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --border-color: rgba(0, 0, 0, 0.06);
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.05);
+      --glass-glow: 0 8px 32px 0 rgba(157, 78, 221, 0.05);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; transition: background-color 0.3s ease, border-color 0.3s ease; }
+    body { font-family: var(--font-stack); background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; overflow-x: hidden; }
+    body::before { content: ''; position: fixed; top: -15%; left: -15%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(157, 78, 221, 0.08) 0%, transparent 70%); z-index: -1; pointer-events: none; }
+    .navbar { display: flex; justify-content: space-between; align-items: center; padding: 1.5rem 5%; border-bottom: 1px solid var(--border-color); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: var(--bg-card); position: sticky; top: 0; z-index: 100; }
+    .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+    .brand-icon { background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan)); width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.25rem; box-shadow: 0 4px 15px rgba(157, 78, 221, 0.4); }
+    .brand-text h1 { font-size: 1.2rem; font-weight: 800; letter-spacing: 0.5px; background: linear-gradient(to right, var(--neon-purple), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .brand-text p { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; letter-spacing: 1px; }
+    .nav-actions { display: flex; align-items: center; gap: 1.25rem; }
+    .profile-badge { display: flex; align-items: center; gap: 0.5rem; background: rgba(157, 78, 221, 0.1); border: 1px solid rgba(157, 78, 221, 0.2); color: var(--neon-purple); padding: 0.5rem 1rem; border-radius: 99px; font-size: 0.85rem; font-weight: 600; }
+    .theme-toggle-btn, .logout-btn { border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.03); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: all 0.2s ease; text-decoration: none; }
+    .theme-toggle-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 10px rgba(6, 182, 212, 0.15); }
+    .logout-btn { color: var(--neon-red); }
+    .logout-btn:hover { border-color: var(--neon-red); background: rgba(239, 68, 68, 0.05); }
+    .dashboard-container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+    .panel-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; padding: 2rem; backdrop-filter: blur(16px); box-shadow: var(--shadow-md), var(--glass-glow); margin-bottom: 2rem; position: relative; overflow: hidden; }
+    .panel-card::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(to right, var(--neon-purple), var(--neon-cyan)); }
+    .panel-title { font-size: 1.4rem; font-weight: 800; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .panel-title i { color: var(--neon-purple); }
+    .status-badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.85rem; border-radius: 99px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .status-badge.active { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--neon-green); }
+    .status-badge.inactive { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--neon-red); }
+    .properties-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; }
+    .property-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+    .property-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; }
+    .property-name { font-weight: 700; font-size: 1.1rem; }
+    .metric-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; }
+    .metric-label { color: var(--text-muted); }
+    .metric-value { font-weight: 700; }
+    .metric-value.highlight { color: var(--neon-cyan); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.65rem 1.2rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; font-family: var(--font-stack); transition: all 0.2s ease; border: none; width: 100%; }
+    .btn-danger { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--neon-red); }
+    .btn-danger:hover { background: var(--neon-red); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }
+    .btn-success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: var(--neon-green); }
+    .btn-success:hover { background: var(--neon-green); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+    .action-group { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+    .sensor-block { background: rgba(255, 255, 255, 0.03); border: 1px dashed var(--border-color); border-radius: 12px; padding: 0.85rem 1rem; }
+    .sensor-block-title { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; color: var(--text-muted); margin-bottom: 0.7rem; }
+    .sensor-block-title .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--neon-green); box-shadow: 0 0 6px var(--neon-green); display: inline-block; margin-right: 0.4rem; }
+    .sensor-block-title.stale .live-dot { background: var(--neon-red); box-shadow: 0 0 6px var(--neon-red); }
+    .sensor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem 0.5rem; }
+    .sensor-stat { display: flex; flex-direction: column; gap: 0.15rem; }
+    .sensor-stat .s-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+    .sensor-stat .s-value { font-size: 0.95rem; font-weight: 700; }
+    .sensor-stat .s-value.v-volt { color: var(--neon-yellow); }
+    .sensor-stat .s-value.v-amp { color: var(--neon-cyan); }
+    .sensor-stat .s-value.v-watt { color: var(--neon-purple); }
+    .tenant-table { width: 100%; border-collapse: collapse; }
+    .tenant-table th, .tenant-table td { text-align: left; padding: 0.9rem 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    .tenant-table th { color: var(--text-muted); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.5px; font-weight: 700; }
+    .tenant-table tbody tr:last-child td { border-bottom: none; }
+    .tenant-table td.amount { font-weight: 700; color: var(--neon-cyan); }
+    .empty-state { text-align: center; padding: 2rem 0; color: var(--text-muted); }
+    .empty-state i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="admin-dashboard.html" class="brand">
+      <div class="brand-icon"><i class="fa-solid fa-gauge-high"></i></div>
+      <div class="brand-text">
+        <h1>Mizigo Command Center</h1>
+        <p>Admin Control Gateway</p>
+      </div>
+    </a>
+    <div class="nav-actions">
+      <div class="profile-badge">
+        <i class="fa-solid fa-user-shield"></i>
+        <span id="username-display">...</span>
+      </div>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
+        <i id="theme-icon" class="fa-solid fa-moon"></i>
+      </button>
+      <a href="#" id="logout-btn" class="logout-btn" title="Logout"><i class="fa-solid fa-power-off"></i></a>
+    </div>
+  </nav>
+
+  <div class="dashboard-container">
+    <div class="panel-card">
+      <div class="panel-title"><i class="fa-solid fa-users-gear"></i> Landlords Overview</div>
+      <div id="landlords-panel"><div class="empty-state">Loading…</div></div>
+    </div>
+
+    <div id="tenants-by-landlord"></div>
+
+    <div class="panel-card">
+      <div class="panel-title"><i class="fa-solid fa-house-laptop"></i> All Property Meter Nodes (System-Wide)</div>
+      <div class="properties-grid" id="properties-grid">
+        <div class="empty-state" style="grid-column: 1 / -1;">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ---------- Theme ----------
+    function applySavedTheme() {
+      const saved = localStorage.getItem('theme') || 'dark';
+      const body = document.body, icon = document.getElementById('theme-icon');
+      if (saved === 'light') { body.classList.add('light-theme'); icon.classList.replace('fa-moon', 'fa-sun'); }
+      else { body.classList.remove('light-theme'); icon.classList.replace('fa-sun', 'fa-moon'); }
+    }
+    function toggleTheme() {
+      const body = document.body, icon = document.getElementById('theme-icon');
+      if (body.classList.contains('light-theme')) { body.classList.remove('light-theme'); icon.classList.replace('fa-sun', 'fa-moon'); localStorage.setItem('theme', 'dark'); }
+      else { body.classList.add('light-theme'); icon.classList.replace('fa-moon', 'fa-sun'); localStorage.setItem('theme', 'light'); }
+    }
+    applySavedTheme();
+
+    // ---------- Logout ----------
+    document.getElementById('logout-btn').addEventListener('click', async (e) => {
+      e.preventDefault();
+      await fetch('/api/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    // ---------- Helpers ----------
+    const fmt = (n, d = 1) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+    const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    async function postAction(action, room_id) {
+      const res = await fetch('/api/dashboard/admin-action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, room_id }),
+      });
+      if (!res.ok) { alert('Action failed.'); return; }
+      loadDashboard(); // refresh immediately after an action
+    }
+
+    function renderLandlords(landlords, tenantsByLandlord) {
+      const panel = document.getElementById('landlords-panel');
+      if (!landlords.length) {
+        panel.innerHTML = '<div class="empty-state"><i class="fa-solid fa-folder-open"></i>No landlords registered yet.</div>';
+        return;
+      }
+      let rows = '';
+      for (const lord of landlords) {
+        const tenants = tenantsByLandlord[lord.user_id] || [];
+        const total = tenants.reduce((sum, t) => sum + parseFloat(t.total_paid || 0), 0);
+        rows += `<tr><td>${esc(lord.username)}</td><td>${tenants.length}</td><td class="amount">${fmt(total)} UGX</td></tr>`;
+      }
+      panel.innerHTML = `<table class="tenant-table"><thead><tr><th>Landlord</th><th>Tenants Assigned</th><th>Total Collected</th></tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function renderTenantsByLandlord(landlords, tenantsByLandlord) {
+      const container = document.getElementById('tenants-by-landlord');
+      let html = '';
+      for (const lord of landlords) {
+        const tenants = tenantsByLandlord[lord.user_id] || [];
+        if (!tenants.length) continue;
+        let rows = '';
+        for (const t of tenants) {
+          rows += `<tr>
+            <td>${esc(t.tenant_name)}</td>
+            <td>${esc(t.room_name)}</td>
+            <td>${fmt(t.remaining_units)} kWh</td>
+            <td>${fmt(t.last_amount_paid)} UGX</td>
+            <td class="amount">${fmt(t.total_paid)} UGX</td>
+          </tr>`;
+        }
+        html += `<div class="panel-card">
+          <div class="panel-title"><i class="fa-solid fa-sack-dollar"></i> Tenants Under ${esc(lord.username)}</div>
+          <table class="tenant-table">
+            <thead><tr><th>Tenant</th><th>Room</th><th>Units Remaining</th><th>Amount Paid So Far</th><th>Total Amount Paid</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+      }
+      container.innerHTML = html;
+    }
+
+    function renderRooms(rooms) {
+      const grid = document.getElementById('properties-grid');
+      if (!rooms.length) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-folder-open"></i>No active property rooms logged.</div>';
+        return;
+      }
+      let html = '';
+      for (const room of rooms) {
+        const t = room.telemetry || { conn_state: 'none' };
+        const isLive = t.conn_state === 'live';
+        const label = t.conn_state === 'live' ? 'Live'
+          : t.conn_state === 'stale' ? `Stale — ${new Date(t.logged_at).toLocaleTimeString()}`
+          : 'Not Connected';
+        const v = t.voltage || 0, c = t.current || 0, p = t.power || 0, en = t.energy || 0, fr = t.frequency || 0, pf = t.power_factor || 0;
+
+        html += `<div class="property-card">
+          <div class="property-header">
+            <div class="property-name">${esc(room.room_name)}</div>
+            ${room.relay_status == 1
+              ? '<span class="status-badge active"><i class="fa-solid fa-circle-play"></i> ONLINE</span>'
+              : '<span class="status-badge inactive"><i class="fa-solid fa-circle-stop"></i> CUT-OFF</span>'}
+          </div>
+          <div class="metric-row"><span class="metric-label">Remaining Balance</span><span class="metric-value highlight">${fmt(room.remaining_units)} kWh</span></div>
+          <div class="metric-row"><span class="metric-label">Total Amount Paid</span><span class="metric-value">${fmt(room.total_paid)} UGX</span></div>
+          <div class="sensor-block">
+            <div class="sensor-block-title${isLive ? '' : ' stale'}"><span><span class="live-dot"></span>PZEM Sensor Readings</span><span>${label}</span></div>
+            <div class="sensor-grid">
+              <div class="sensor-stat"><span class="s-label">Voltage</span><span class="s-value v-volt">${fmt(v)} V</span></div>
+              <div class="sensor-stat"><span class="s-label">Current</span><span class="s-value v-amp">${fmt(c, 3)} A</span></div>
+              <div class="sensor-stat"><span class="s-label">Power</span><span class="s-value v-watt">${fmt(p)} W</span></div>
+              <div class="sensor-stat"><span class="s-label">Energy</span><span class="s-value">${fmt(en, 3)} kWh</span></div>
+              <div class="sensor-stat"><span class="s-label">Frequency</span><span class="s-value">${fmt(fr)} Hz</span></div>
+              <div class="sensor-stat"><span class="s-label">Power Factor</span><span class="s-value">${fmt(pf, 2)}</span></div>
+            </div>
+          </div>
+          <div class="action-group">
+            <button class="btn btn-danger" onclick="if(confirm('Reset remaining units and total paid to 0.0 for ${esc(room.room_name)}?')) postAction('demo_reset', ${room.room_id})"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+            <button class="btn btn-success" onclick="postAction('demo_restore', ${room.room_id})"><i class="fa-solid fa-bolt"></i> Force Restore</button>
+          </div>
+        </div>`;
+      }
+      grid.innerHTML = html;
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/dashboard/admin');
+        if (res.status === 401) { window.location.href = '/login.html'; return; }
+        const data = await res.json();
+        renderLandlords(data.landlords, data.tenants_by_landlord);
+        renderTenantsByLandlord(data.landlords, data.tenants_by_landlord);
+        renderRooms(data.rooms);
+      } catch (err) {
+        console.error('Failed to load dashboard', err);
+      }
+    }
+
+    // Username shown in the badge comes from the JWT session; a lightweight
+    // way to surface it without a separate endpoint is to just show a
+    // generic label — swap in a /api/session endpoint if you want the exact name.
+    document.getElementById('username-display').textContent = 'Admin';
+
+    loadDashboard();
+    setInterval(loadDashboard, 4000); // poll every 4s so live PZEM readings stay current
+  </script>
+</body>
+</html>

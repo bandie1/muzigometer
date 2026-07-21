@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mizigo Meter - Gateway Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root { --bg-dark:#04060e; --card-bg:rgba(9,15,36,0.6); --neon-purple:#8b5cf6; --neon-blue:#3b82f6; --text-main:#f8fafc; --text-muted:#64748b; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { background:var(--bg-dark); background-image: radial-gradient(at 0% 0%, rgba(139,92,246,0.15) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(59,130,246,0.15) 0px, transparent 50%); color:var(--text-main); font-family:'Plus Jakarta Sans',sans-serif; min-height:100vh; display:flex; justify-content:center; align-items:center; padding:20px; }
+    .login-container { background:var(--card-bg); border:1px solid rgba(139,92,246,0.2); border-radius:28px; padding:50px 40px; width:100%; max-width:440px; backdrop-filter:blur(20px); box-shadow:0 30px 60px rgba(0,0,0,0.5); }
+    .login-header { display:flex; justify-content:center; margin-bottom:40px; }
+    .brand-mizigo, .brand-meter { font-family:'Orbitron',sans-serif; font-weight:900; font-size:1.4rem; }
+    .brand-meter { color:var(--neon-blue); }
+    .brand-sub { display:block; font-size:0.6rem; letter-spacing:2px; color:var(--text-muted); font-weight:800; }
+    .form-group { margin-bottom:24px; }
+    .form-label { display:block; font-size:0.8rem; font-weight:700; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
+    .form-input { width:100%; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px; color:var(--text-main); font-family:inherit; font-size:0.95rem; }
+    .form-input:focus { outline:none; border-color:var(--neon-purple); box-shadow:0 0 15px rgba(139,92,246,0.25); }
+    .btn-login { width:100%; background:linear-gradient(90deg,var(--neon-purple),var(--neon-blue)); border:none; border-radius:12px; color:white; padding:15px; font-size:1rem; font-weight:800; cursor:pointer; }
+    .btn-login:hover { box-shadow:0 0 25px rgba(139,92,246,0.45); }
+    .signup-link, .forgot-link { display:block; text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted); text-decoration:none; }
+    .signup-link span { color:var(--neon-blue); }
+    .error-alert { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); color:#f87171; padding:12px 16px; border-radius:12px; font-size:0.85rem; margin-bottom:24px; display:none; }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-header">
+      <div>
+        <div><span class="brand-mizigo">MIZIGO</span><span class="brand-meter">METER</span></div>
+        <span class="brand-sub">SMART UTILITY GATEWAY</span>
+      </div>
+    </div>
+
+    <div class="error-alert" id="error-alert"></div>
+
+    <form id="login-form">
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input class="form-input" type="text" id="username" required autocomplete="off">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" id="password" required>
+      </div>
+      <button type="submit" class="btn-login">Login</button>
+    </form>
+
+    <a href="/forgot-password.html" class="forgot-link">Forgot Password?</a>
+    <a href="/signup.html" class="signup-link">New Landlord or Tenant? <span>Register Node</span></a>
+  </div>
+
+  <script>
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorBox = document.getElementById('error-alert');
+      errorBox.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          errorBox.textContent = data.error || 'Login failed.';
+          errorBox.style.display = 'block';
+          return;
+        }
+
+        const dest = { admin: '/admin-dashboard.html', landlord: '/landlord-dashboard.html', tenant: '/tenant-dashboard.html' };
+        window.location.href = dest[data.role] || '/tenant-dashboard.html';
+      } catch (err) {
+        errorBox.textContent = 'Network error. Please try again.';
+        errorBox.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
