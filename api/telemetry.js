@@ -1,11 +1,19 @@
 // api/telemetry.js — called directly by the ESP32 firmware.
 // Point the device at:  https://your-project.vercel.app/api/telemetry
 //
-// NOTE: For the upsert below to work, energy_logs must have a UNIQUE
-// constraint on room_id (one row per room):
+// ARCHITECTURE NOTE (split write path):
+// The ESP32 writes raw sensor readings (voltage/current/power/energy/etc)
+// STRAIGHT to Supabase via its REST API (PostgREST) — see the firmware's
+// pushToSupabase(). This endpoint is no longer the one writing energy_logs;
+// it only receives a lightweight { room_id, power } payload so it can:
+//   1. Deduct prepaid tokens for power actively being drawn, and
+//   2. Decide relay ON/OFF (auto-cutoff at 0 balance), and
+//   3. Reply with the current relay status for each room.
+// Keeping energy_logs writes to a single writer (the ESP32) avoids two
+// processes racing to upsert the same room_id row every few seconds.
+//
+// Still required in Supabase (for the ESP32's direct upserts to work):
 //   ALTER TABLE energy_logs ADD CONSTRAINT unique_room UNIQUE (room_id);
-// and a logged_at timestamp column so dashboards can tell fresh vs stale:
-//   ALTER TABLE energy_logs ALTER COLUMN logged_at SET DEFAULT now();
 
 const pool = require('../lib/db');
 
@@ -23,31 +31,14 @@ module.exports = async (req, res) => {
 
       for (const reading of Array.isArray(readings) ? readings : []) {
         const room_id = parseInt(reading.room_id, 10);
-        const voltage = parseFloat(reading.voltage) || 0;
-        const current = parseFloat(reading.current) || 0;
         const power = parseFloat(reading.power) || 0;
-        const energy = parseFloat(reading.energy) || 0;
-        const frequency = reading.frequency !== undefined ? parseFloat(reading.frequency) : 50.0;
-        const power_factor = reading.pf !== undefined ? parseFloat(reading.pf) : 1.0;
 
         processedRoomIds.push(room_id);
 
-        // 1. Upsert the latest telemetry — one row per room_id, timestamped now().
-        await pool.query(
-          `INSERT INTO energy_logs (room_id, voltage, current, power, energy, frequency, power_factor, logged_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, now())
-           ON CONFLICT (room_id) DO UPDATE SET
-             voltage = EXCLUDED.voltage,
-             current = EXCLUDED.current,
-             power = EXCLUDED.power,
-             energy = EXCLUDED.energy,
-             frequency = EXCLUDED.frequency,
-             power_factor = EXCLUDED.power_factor,
-             logged_at = now()`,
-          [room_id, voltage, current, power, energy, frequency, power_factor]
-        );
-
-        // 2. Auto-deduct tokens if the room is actively drawing power.
+        // Auto-deduct tokens if the room is actively drawing power.
+        // (voltage/current/energy/frequency/pf are no longer needed here —
+        // they're already being written directly to energy_logs by the
+        // ESP32 itself. Only `power` matters for the deduction formula.)
         if (power > 0) {
           const kwhConsumed = (power * 3) / 3600 / 1000; // assumes ~3s telemetry interval
 
