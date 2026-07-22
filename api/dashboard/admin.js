@@ -40,16 +40,25 @@ module.exports = async (req, res) => {
       ) e2 ON e1.room_id = e2.room_id AND e1.logged_at = e2.max_logged_at
     `);
 
-    // Pre-compute connection state server-side: 'live' within 15s, 'stale' if
-    // older, 'none' if the room has never reported. Readings are LIVE ONLY —
-    // whenever a room isn't actively reporting (stale or none), every numeric
-    // value is zeroed out rather than showing the last stored reading.
+    // Pre-compute connection state server-side: 'live' within 15s AND the
+    // device reported the PZEM as actually online, 'sensor_offline' if the
+    // device is reporting but says the PZEM itself isn't answering, 'stale'
+    // if the device has stopped reporting altogether, 'none' if the room has
+    // never reported. Readings are LIVE ONLY — in every non-live case, every
+    // numeric value is zeroed out rather than showing the last stored
+    // reading.
     const telemetryByRoom = {};
     for (const row of telemetryRes.rows) {
       const ageSeconds = row.logged_at ? (Date.now() - new Date(row.logged_at).getTime()) / 1000 : Infinity;
-      const isLive = ageSeconds <= 15;
+      const isFresh = ageSeconds <= 15;
+      let conn_state;
+      if (!isFresh) conn_state = 'stale';
+      else if (!row.pzem_online) conn_state = 'sensor_offline';
+      else conn_state = 'live';
+
+      const isLive = conn_state === 'live';
       telemetryByRoom[row.room_id] = {
-        conn_state: isLive ? 'live' : 'stale',
+        conn_state,
         logged_at: row.logged_at,
         voltage: isLive ? row.voltage : 0,
         current: isLive ? row.current : 0,

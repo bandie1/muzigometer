@@ -27,8 +27,8 @@ const DEFAULT_INTERVAL_SECONDS = 10;
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  const deviceId = req.headers['x-device-id'];
-  const deviceKey = req.headers['x-device-key'];
+  const deviceId = req.headers['ESP32-one'];
+  const deviceKey = req.headers['meterone'];
 
   if (!deviceId || !deviceKey) {
     return res.status(401).json({ error: 'Missing X-Device-Id / X-Device-Key headers.' });
@@ -62,18 +62,27 @@ module.exports = async (req, res) => {
         continue;
       }
 
-      const voltage = parseFloat(reading.voltage) || 0;
-      const current = parseFloat(reading.current) || 0;
-      const power = parseFloat(reading.power) || 0;
-      const energy = parseFloat(reading.energy) || 0;
-      const frequency = reading.frequency !== undefined ? parseFloat(reading.frequency) : 50.0;
-      const power_factor = reading.pf !== undefined ? parseFloat(reading.pf) : 1.0;
+      // Server never trusts the device's numbers blindly for the offline
+      // case either: if it says online:false, we zero the stored reading
+      // regardless of what's in voltage/current/power/energy, so a buggy or
+      // tampered device can't keep a stale non-zero reading showing as live.
+      const online = reading.online !== false; // default true for backward compatibility
+
+      const voltage = online ? (parseFloat(reading.voltage) || 0) : 0;
+      const current = online ? (parseFloat(reading.current) || 0) : 0;
+      const power = online ? (parseFloat(reading.power) || 0) : 0;
+      const energy = online ? (parseFloat(reading.energy) || 0) : 0;
+      const frequency = online && reading.frequency !== undefined ? parseFloat(reading.frequency) : 0;
+      const power_factor = online && reading.pf !== undefined ? parseFloat(reading.pf) : 0;
 
       processedRoomIds.push(room_id);
 
       // 1. Upsert the latest telemetry — one row per room_id, timestamped now().
       //    logged_at is always set explicitly here (not left to a DEFAULT),
-      //    so it updates on every write, insert or update alike.
+      //    so it updates on every write, insert or update alike. pzem_online
+      //    is stored too, so the dashboard can tell "sensor disconnected"
+      //    apart from "device stopped reporting entirely" even though both
+      //    show zero.
       const prevRes = await pool.query(
         'SELECT logged_at FROM energy_logs WHERE room_id = $1',
         [room_id]
@@ -81,8 +90,8 @@ module.exports = async (req, res) => {
       const prevLoggedAt = prevRes.rows[0] ? prevRes.rows[0].logged_at : null;
 
       await pool.query(
-        `INSERT INTO energy_logs (room_id, voltage, current, power, energy, frequency, power_factor, logged_at)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, now())
+        `INSERT INTO energy_logs (room_id, voltage, current, power, energy, frequency, power_factor, pzem_online, logged_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
          ON CONFLICT (room_id) DO UPDATE SET
            voltage = EXCLUDED.voltage,
            current = EXCLUDED.current,
@@ -90,8 +99,9 @@ module.exports = async (req, res) => {
            energy = EXCLUDED.energy,
            frequency = EXCLUDED.frequency,
            power_factor = EXCLUDED.power_factor,
+           pzem_online = EXCLUDED.pzem_online,
            logged_at = now()`,
-        [room_id, voltage, current, power, energy, frequency, power_factor]
+        [room_id, voltage, current, power, energy, frequency, power_factor, online]
       );
 
       // 2. Auto-deduct tokens based on the ACTUAL elapsed time since the last
@@ -99,8 +109,9 @@ module.exports = async (req, res) => {
       //    assumed a fixed 3-second gap (copied from the local PZEM polling
       //    rate) even though telemetry is only sent every ~10s, which
       //    under-billed consumption by roughly 3x and made cutoffs land at
-      //    the wrong balance.
-      if (power > 0) {
+      //    the wrong balance. Only deducts while the sensor is actually
+      //    online and drawing power.
+      if (online && power > 0) {
         let elapsedSeconds = DEFAULT_INTERVAL_SECONDS;
         if (prevLoggedAt) {
           elapsedSeconds = (Date.now() - new Date(prevLoggedAt).getTime()) / 1000;
@@ -114,13 +125,20 @@ module.exports = async (req, res) => {
           'UPDATE rooms SET remaining_units = GREATEST(0, remaining_units - $1) WHERE room_id = $2',
           [kwhConsumed, room_id]
         );
-
-        // Auto-cutoff: trip relay off the instant balance hits 0.
-        await pool.query(
-          'UPDATE rooms SET relay_status = 0 WHERE room_id = $1 AND remaining_units <= 0',
-          [room_id]
-        );
       }
+
+      // 3. Enforce relay-vs-balance on EVERY reading, online or offline,
+      //    drawing power or not — not just while actively consuming. This is
+      //    what makes cutoff/restore immediate: the moment a room's balance
+      //    is 0 (whether from consumption just now, or it was already 0 when
+      //    the PZEM came back online), the relay is forced off; the moment a
+      //    top-up brings the balance above 0, the relay is forced back on on
+      //    the very next reading, without waiting on a manual admin action.
+      await pool.query(
+        `UPDATE rooms SET relay_status = CASE WHEN remaining_units > 0 THEN 1 ELSE 0 END
+         WHERE room_id = $1`,
+        [room_id]
+      );
     }
 
     await pool.query('UPDATE devices SET last_seen_at = now() WHERE device_id = $1', [deviceId]);
@@ -145,7 +163,8 @@ module.exports = async (req, res) => {
     }));
 
     return res.status(200).json({ relays });
-  } catch (err) {
+  } 
+  catch (err) {
     return res.status(500).json({ error: 'Database Connection Failed: ' + err.message });
   }
-};
+}

@@ -290,6 +290,7 @@
       const t = room.telemetry || { conn_state: 'none' };
       const isLive = t.conn_state === 'live';
       const label = t.conn_state === 'live' ? 'Live'
+        : t.conn_state === 'sensor_offline' ? 'Sensor Offline'
         : t.conn_state === 'stale' ? `Stale — ${new Date(t.logged_at).toLocaleTimeString()}`
         : 'Not Connected';
       const v = t.voltage || 0, c = t.current || 0, p = t.power || 0, en = t.energy || 0, fr = t.frequency || 0, pf = t.power_factor || 0;
