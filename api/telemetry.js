@@ -27,7 +27,7 @@ const DEFAULT_INTERVAL_SECONDS = 10;
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  const deviceId = req.headers['ESP32-one'];
+  const deviceId = req.headers['numberone'];
   const deviceKey = req.headers['meterone'];
 
   if (!deviceId || !deviceKey) {
