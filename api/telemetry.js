@@ -163,8 +163,7 @@ module.exports = async (req, res) => {
     }));
 
     return res.status(200).json({ relays });
-  } 
-  catch (err) {
+  } catch (err) {
     return res.status(500).json({ error: 'Database Connection Failed: ' + err.message });
   }
-}
+};
