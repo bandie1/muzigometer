@@ -2,16 +2,7 @@
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
-  "regions": ["iad1"],
-  "functions": {
-    "api/**/*.js": {
-      "runtime": "nodejs18.x",
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
   "rewrites": [
-    { "source": "/", "destination": "/login.html" },
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/", "destination": "/login.html" }
   ]
 }
