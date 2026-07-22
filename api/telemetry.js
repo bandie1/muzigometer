@@ -31,8 +31,8 @@ module.exports = async (req, res) => {
   const deviceKey = req.headers['meterone'];
 
   if (!deviceId || !deviceKey) {
-    return res.status(401).json({ error: 'Missing numberone / meterone headers.' });
-  }
+  return res.status(401).json({ error: 'Missing numberone / meterone headers.' });
+}
 
   try {
     const deviceRes = await pool.query(
