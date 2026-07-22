@@ -27,11 +27,11 @@ const DEFAULT_INTERVAL_SECONDS = 10;
 module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
 
-  const deviceId = req.headers['numberone'];
-  const deviceKey = req.headers['meterone'];
+  const deviceId = req.headers['x-device-id'];
+const deviceKey = req.headers['x-device-key'];
 
   if (!deviceId || !deviceKey) {
-  return res.status(401).json({ error: 'Missing numberone / meterone headers.' });
+  return res.status(401).json({ error: 'Missing x-device-id / x-device-key headers.' });
 }
 
   try {
