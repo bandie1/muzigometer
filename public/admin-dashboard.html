@@ -400,7 +400,7 @@
     document.getElementById('username-display').textContent = 'Admin';
 
     loadDashboard();
-    setInterval(loadDashboard, 4000); // poll every 4s so live PZEM readings stay current
+    setInterval(loadDashboard, 2000); // 2s poll — near-real-time given the 10s device send interval
   </script>
 </body>
 </html>
