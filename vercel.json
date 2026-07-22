@@ -1,5 +1,4 @@
 ﻿{
-  "$schema": "https://vercel.sh",
   "version": 2,
   "cleanUrls": true,
   "trailingSlash": false,
