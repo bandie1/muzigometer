@@ -110,6 +110,42 @@
     .drawer-body-inner { padding: 0 1.4rem 1.4rem; border-top: 1px solid var(--border-color); }
     .drawer-body-inner .properties-grid { margin-top: 1.25rem; }
 
+    /* ---------- Page tabs ---------- */
+    .page-tabs { display: flex; gap: 0.5rem; max-width: 1100px; margin: 1.5rem auto 0; padding: 0 1.5rem; }
+    .page-tab { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.25rem; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; border: 1px solid var(--border-color); background: rgba(255, 255, 255, 0.02); color: var(--text-muted); }
+    .page-tab.active { color: var(--neon-purple); border-color: rgba(157, 78, 221, 0.35); background: rgba(157, 78, 221, 0.08); }
+    .page-view { display: none; }
+    .page-view.active { display: block; }
+
+    /* ---------- Statistics page ---------- */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+    .stat-card { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem 1.4rem; display: flex; flex-direction: column; gap: 0.4rem; }
+    .stat-card .stat-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; margin-bottom: 0.4rem; }
+    .stat-card .stat-icon.purple { background: rgba(157, 78, 221, 0.12); color: var(--neon-purple); }
+    .stat-card .stat-icon.cyan { background: rgba(6, 182, 212, 0.12); color: var(--neon-cyan); }
+    .stat-card .stat-icon.green { background: rgba(16, 185, 129, 0.12); color: var(--neon-green); }
+    .stat-card .stat-icon.yellow { background: rgba(245, 158, 11, 0.12); color: var(--neon-yellow); }
+    .stat-card .stat-icon.red { background: rgba(239, 68, 68, 0.12); color: var(--neon-red); }
+    .stat-card .stat-value { font-size: 1.6rem; font-weight: 800; }
+    .stat-card .stat-label { font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 700; }
+    .stat-card .stat-sub { font-size: 0.75rem; color: var(--text-muted); }
+
+    .bar-list { display: flex; flex-direction: column; gap: 0.9rem; }
+    .bar-row .bar-row-top { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.4rem; }
+    .bar-row .bar-row-top .bar-name { color: var(--text-muted); font-weight: 600; }
+    .bar-row .bar-row-top .bar-num { font-weight: 700; }
+    .bar-track { width: 100%; height: 10px; border-radius: 99px; background: rgba(255, 255, 255, 0.05); overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; background: linear-gradient(to right, var(--neon-purple), var(--neon-cyan)); }
+    .bar-fill.green { background: linear-gradient(to right, var(--neon-green), var(--neon-cyan)); }
+    .bar-fill.red { background: linear-gradient(to right, var(--neon-red), var(--neon-yellow)); }
+
+    .earnings-chart { display: flex; align-items: flex-end; gap: 0.35rem; height: 140px; padding-top: 0.5rem; }
+    .earnings-bar-wrap { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; min-width: 4px; }
+    .earnings-bar { width: 100%; max-width: 22px; border-radius: 4px 4px 0 0; background: linear-gradient(to top, var(--neon-purple), var(--neon-cyan)); }
+    .earnings-chart-empty { color: var(--text-muted); font-size: 0.85rem; text-align: center; width: 100%; padding: 2rem 0; }
+
+    .stats-section-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; }
+
     /* ---------- Pending requests ---------- */
     .pending-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border: 1px solid rgba(245, 158, 11, 0.25); background: rgba(245, 158, 11, 0.06); border-radius: 14px; margin-bottom: 0.85rem; flex-wrap: wrap; }
     .pending-row:last-child { margin-bottom: 0; }
@@ -200,7 +236,12 @@
     </div>
   </nav>
 
-  <div class="dashboard-container">
+  <div class="page-tabs">
+    <div class="page-tab active" id="tab-overview" onclick="switchPage('overview')"><i class="fa-solid fa-table-columns"></i> Overview</div>
+    <div class="page-tab" id="tab-statistics" onclick="switchPage('statistics')"><i class="fa-solid fa-chart-line"></i> Statistics</div>
+  </div>
+
+  <div class="dashboard-container page-view active" id="page-overview">
     <div class="panel-card" id="pending-panel" style="display:none;">
       <div class="panel-title"><i class="fa-solid fa-hourglass-half"></i> Pending Top-Up Requests</div>
       <div id="pending-requests"></div>
@@ -209,6 +250,33 @@
     <div class="panel-card">
       <div class="panel-title"><i class="fa-solid fa-users-gear"></i> Landlords &amp; Properties</div>
       <div id="landlords-drawers"><div class="empty-state">Loading…</div></div>
+    </div>
+  </div>
+
+  <div class="dashboard-container page-view" id="page-statistics">
+    <div class="panel-card">
+      <div class="panel-title"><i class="fa-solid fa-users"></i> User Analytics</div>
+      <div class="stats-grid" id="stats-users"><div class="empty-state">Loading…</div></div>
+    </div>
+
+    <div class="stats-section-grid">
+      <div class="panel-card">
+        <div class="panel-title"><i class="fa-solid fa-sack-dollar"></i> Earnings (2% Commission)</div>
+        <div class="stats-grid" id="stats-earnings" style="margin-bottom: 1.5rem;"><div class="empty-state">Loading…</div></div>
+        <div class="bar-row" style="margin-bottom: 1.25rem;">
+          <div class="bar-row-top"><span class="bar-name">Approved vs Pending vs Rejected (by amount)</span></div>
+          <div id="stats-purchase-breakdown"></div>
+        </div>
+        <div class="panel-title" style="font-size:1rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-chart-column"></i> Commission — last 30 days</div>
+        <div class="earnings-chart" id="stats-earnings-chart"></div>
+      </div>
+
+      <div class="panel-card">
+        <div class="panel-title"><i class="fa-solid fa-microchip"></i> System Analytics</div>
+        <div class="stats-grid" id="stats-system" style="margin-bottom: 1.5rem;"><div class="empty-state">Loading…</div></div>
+        <div class="panel-title" style="font-size:1rem; margin-bottom: 0.75rem;"><i class="fa-solid fa-satellite-dish"></i> Sensor Diagnosis</div>
+        <div class="bar-list" id="stats-sensor-diagnosis"></div>
+      </div>
     </div>
   </div>
 
@@ -392,6 +460,129 @@
         renderLandlordDrawers(data.landlords, data.tenants_by_landlord, roomsByLandlord);
       } catch (err) {
         console.error('Failed to load dashboard', err);
+      }
+    }
+
+    // ---------- Page tabs (Overview / Statistics) ----------
+    let currentPage = 'overview';
+    let statsPollTimer = null;
+
+    function switchPage(page) {
+      currentPage = page;
+      document.getElementById('tab-overview').classList.toggle('active', page === 'overview');
+      document.getElementById('tab-statistics').classList.toggle('active', page === 'statistics');
+      document.getElementById('page-overview').classList.toggle('active', page === 'overview');
+      document.getElementById('page-statistics').classList.toggle('active', page === 'statistics');
+
+      if (page === 'statistics') {
+        loadStatistics();
+        if (!statsPollTimer) statsPollTimer = setInterval(loadStatistics, 5000);
+      } else if (statsPollTimer) {
+        clearInterval(statsPollTimer);
+        statsPollTimer = null;
+      }
+    }
+
+    function money(n) { return fmt(n, 0) + ' UGX'; }
+
+    function statCard(icon, colorClass, value, label, sub) {
+      return `<div class="stat-card">
+        <div class="stat-icon ${colorClass}"><i class="fa-solid ${icon}"></i></div>
+        <div class="stat-value">${value}</div>
+        <div class="stat-label">${label}</div>
+        ${sub ? `<div class="stat-sub">${sub}</div>` : ''}
+      </div>`;
+    }
+
+    function renderUserStats(users) {
+      const html = [
+        statCard('fa-user-tie', 'purple', users.total_landlords, 'Landlords'),
+        statCard('fa-people-roof', 'cyan', users.total_tenants, 'Tenants'),
+        statCard('fa-door-open', 'green', users.total_rooms, 'Total Rooms', `${users.occupied_rooms} occupied · ${users.vacant_rooms} vacant`),
+        statCard('fa-door-closed', 'yellow', users.vacant_rooms, 'Vacant Rooms'),
+      ].join('');
+      document.getElementById('stats-users').innerHTML = html;
+    }
+
+    function renderEarningsStats(earnings) {
+      const html = [
+        statCard('fa-coins', 'green', money(earnings.total_commission), 'Total Commission Earned', `${(earnings.commission_rate * 100).toFixed(0)}% of every approved top-up`),
+        statCard('fa-money-bill-trend-up', 'cyan', money(earnings.approved_amount), 'Approved Top-Ups', `${earnings.approved_count} request${earnings.approved_count === 1 ? '' : 's'}`),
+        statCard('fa-hourglass-half', 'yellow', money(earnings.pending_amount), 'Pending Top-Ups', `${earnings.pending_count} request${earnings.pending_count === 1 ? '' : 's'}`),
+        statCard('fa-hand-holding-dollar', 'purple', money(earnings.net_to_landlords), 'Net to Landlords'),
+      ].join('');
+      document.getElementById('stats-earnings').innerHTML = html;
+
+      const total = earnings.approved_amount + earnings.pending_amount + earnings.rejected_amount;
+      const pct = (x) => total > 0 ? (x / total * 100) : 0;
+      const breakdown = `
+        <div class="bar-row">
+          <div class="bar-row-top"><span class="bar-name">Approved</span><span class="bar-num">${money(earnings.approved_amount)}</span></div>
+          <div class="bar-track"><div class="bar-fill green" style="width:${pct(earnings.approved_amount)}%"></div></div>
+        </div>
+        <div class="bar-row" style="margin-top:0.75rem;">
+          <div class="bar-row-top"><span class="bar-name">Pending</span><span class="bar-num">${money(earnings.pending_amount)}</span></div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct(earnings.pending_amount)}%"></div></div>
+        </div>
+        <div class="bar-row" style="margin-top:0.75rem;">
+          <div class="bar-row-top"><span class="bar-name">Rejected</span><span class="bar-num">${money(earnings.rejected_amount)}</span></div>
+          <div class="bar-track"><div class="bar-fill red" style="width:${pct(earnings.rejected_amount)}%"></div></div>
+        </div>`;
+      document.getElementById('stats-purchase-breakdown').innerHTML = breakdown;
+
+      const chartEl = document.getElementById('stats-earnings-chart');
+      const days = earnings.daily_earnings || [];
+      if (!days.length) {
+        chartEl.innerHTML = '<div class="earnings-chart-empty">No approved top-ups in the last 30 days.</div>';
+      } else {
+        const maxCommission = Math.max(...days.map(d => d.commission), 1);
+        chartEl.innerHTML = days.map(d => {
+          const h = Math.max((d.commission / maxCommission) * 100, 2);
+          const dateLabel = new Date(d.day).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+          return `<div class="earnings-bar-wrap" title="${dateLabel}: ${money(d.commission)} commission">
+            <div class="earnings-bar" style="height:${h}%"></div>
+          </div>`;
+        }).join('');
+      }
+    }
+
+    function renderSystemStats(system) {
+      const html = [
+        statCard('fa-bolt', 'yellow', fmt(system.total_remaining_units, 2) + ' kWh', 'Units Loaded (Remaining)'),
+        statCard('fa-gauge', 'cyan', fmt(system.total_energy_used, 2) + ' kWh', 'Units Used (Latest Readings)'),
+        statCard('fa-user-check', 'green', system.active_tenants, 'Active Tenants', 'Relay currently ON'),
+      ].join('');
+      document.getElementById('stats-system').innerHTML = html;
+
+      const diag = system.sensor_diagnostics || {};
+      const total = (diag.live || 0) + (diag.stale || 0) + (diag.sensor_offline || 0) + (diag.none || 0);
+      const pct = (x) => total > 0 ? (x / total * 100) : 0;
+      const rows = [
+        ['Live', diag.live, 'green'],
+        ['Stale', diag.stale, 'red'],
+        ['Sensor Offline', diag.sensor_offline, 'red'],
+        ['Not Connected', diag.none, ''],
+      ];
+      document.getElementById('stats-sensor-diagnosis').innerHTML = rows.map(([label, val, cls]) => `
+        <div class="bar-row">
+          <div class="bar-row-top"><span class="bar-name">${label}</span><span class="bar-num">${val || 0}</span></div>
+          <div class="bar-track"><div class="bar-fill ${cls}" style="width:${pct(val || 0)}%"></div></div>
+        </div>`).join('');
+    }
+
+    async function loadStatistics() {
+      try {
+        // Statistics live behind ?stats=1 on the same admin.js endpoint
+        // (not a separate function) — see api/dashboard/admin.js.
+        const res = await fetch('/api/dashboard/admin?stats=1');
+        if (res.status === 401) { window.location.href = '/login.html'; return; }
+        const data = await res.json();
+        if (!data.stats) return;
+        renderUserStats(data.stats.users);
+        renderEarningsStats(data.stats.earnings);
+        renderSystemStats(data.stats.system);
+      } catch (err) {
+        console.error('Failed to load statistics', err);
       }
     }
 
