@@ -31,12 +31,20 @@ module.exports = async (req, res) => {
     }
 
     if (decision === 'approve') {
+      // FIX (feature 1): relay state must always be a pure function of the
+      // balance, never hardcoded independently of it. Hardcoding relay=1
+      // here could theoretically re-energize a relay for an instant even
+      // if remaining_units nets out to 0 (e.g. a concurrent consumption
+      // deduction landed between request creation and approval). Deriving
+      // it in the same UPDATE keeps this endpoint, admin-action,
+      // landlord-action, and the telemetry auto-deduction path all
+      // enforcing the exact same rule: balance > 0 => relay on.
       await client.query(
         `UPDATE rooms
          SET remaining_units = remaining_units + $1,
              total_paid = total_paid + $2,
              last_amount_paid = $2,
-             relay_status = 1
+             relay_status = CASE WHEN (remaining_units + $1) > 0 THEN 1 ELSE 0 END
          WHERE room_id = $3`,
         [request.units, request.amount, request.room_id]
       );

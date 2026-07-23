@@ -155,20 +155,61 @@
   <div class="modal-overlay" id="buy-modal">
     <div class="modal-box">
       <div class="modal-title"><i class="fa-solid fa-bolt"></i> Buy Units</div>
-      <p class="modal-desc">Enter the amount you want to pay. We'll open your phone's dialer with the USSD payment code — complete the payment there, then your request goes to the admin for approval.</p>
-      <div class="modal-error" id="modal-error"></div>
-      <label class="form-label">Amount (UGX)</label>
-      <input type="number" id="buy-amount" class="form-input" min="500" step="100" placeholder="e.g. 5000">
-      <div class="estimate-line">Estimated units: <span id="estimate-units">0.00 kWh</span> (@ 700 UGX/kWh)</div>
-      <div class="modal-actions">
-        <button class="btn btn-cancel" id="modal-cancel">Cancel</button>
-        <button class="btn btn-confirm" id="modal-confirm">Dial &amp; Submit</button>
+
+      <!-- Step 1: choose payment network -->
+      <div id="buy-step-network">
+        <p class="modal-desc">Choose which mobile money network you'll pay from.</p>
+        <div class="network-choice-row">
+          <button type="button" class="network-btn" id="network-mtn" data-network="mtn">
+            <i class="fa-solid fa-mobile-screen"></i> MTN Mobile Money
+          </button>
+          <button type="button" class="network-btn" id="network-airtel" data-network="airtel">
+            <i class="fa-solid fa-mobile-screen"></i> Airtel Money
+          </button>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" id="modal-cancel-network">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Step 2: enter amount (shown after a network is picked) -->
+      <div id="buy-step-amount" style="display:none;">
+        <p class="modal-desc">Enter the amount you want to pay. We'll open your phone's dialer with the USSD payment code for <b id="chosen-network-label"></b> — complete the payment there, then your request goes to the admin for approval.</p>
+        <div class="modal-error" id="modal-error"></div>
+        <label class="form-label">Amount (UGX)</label>
+        <input type="number" id="buy-amount" class="form-input" min="500" step="100" placeholder="e.g. 5000">
+        <div class="estimate-line">Estimated units: <span id="estimate-units">0.00 kWh</span> (@ 700 UGX/kWh)</div>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" id="modal-back">Back</button>
+          <button class="btn btn-confirm" id="modal-confirm">Dial &amp; Submit</button>
+        </div>
       </div>
     </div>
   </div>
 
+  <style>
+    .network-choice-row { display: flex; gap: 12px; margin: 16px 0; }
+    .network-btn {
+      flex: 1; padding: 16px 12px; border-radius: 10px; border: 1px solid var(--border-color, #333);
+      background: var(--panel-bg, #1c1c1c); color: inherit; cursor: pointer; font-size: 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all .15s ease;
+    }
+    .network-btn i { font-size: 22px; }
+    .network-btn:hover, .network-btn.selected { border-color: #f5a623; background: rgba(245,166,35,0.12); }
+  </style>
+
   <script>
-    // ---------- Theme ----------
+    // ---------- Payment networks & USSD templates ----------
+    // Kept in sync with the server-side templates in api/dashboard/buy-units.js
+    // (the server rebuilds the code itself and doesn't trust ussd_reference
+    // from the client — this copy is just so the dialer can open instantly
+    // without waiting on the round trip).
+    const USSD_TEMPLATES = {
+      mtn: (amount) => `*165*3*770376*${amount}#`,
+      airtel: (amount) => `*185*9*1337749*${amount}#`,
+    };
+    const NETWORK_LABELS = { mtn: 'MTN Mobile Money', airtel: 'Airtel Money' };
+    let selectedNetwork = null;
     function applySavedTheme() {
       const saved = localStorage.getItem('theme') || 'dark';
       const body = document.body, icon = document.getElementById('theme-icon');
@@ -193,10 +234,6 @@
     const fmt = (n, d = 1) => Number(n || 0).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-    // ---------- USSD payment template ----------
-    // Adjust this short-code to match your mobile-money aggregator's actual
-    // merchant-payment USSD string. {amount} is replaced with the entered value.
-    const USSD_TEMPLATE = '*185*9*{amount}#';
     const UGX_PER_KWH = 700;
 
     let latestRoom = null;
@@ -246,33 +283,64 @@
 
     // ---------- Buy Units modal ----------
     const buyModal = document.getElementById('buy-modal');
+    const stepNetwork = document.getElementById('buy-step-network');
+    const stepAmount = document.getElementById('buy-step-amount');
     const buyAmountInput = document.getElementById('buy-amount');
     const estimateUnits = document.getElementById('estimate-units');
     const modalError = document.getElementById('modal-error');
     const modalConfirm = document.getElementById('modal-confirm');
+    const chosenNetworkLabel = document.getElementById('chosen-network-label');
 
     function openBuyModal() {
+      selectedNetwork = null;
+      document.querySelectorAll('.network-btn').forEach((b) => b.classList.remove('selected'));
+      stepNetwork.style.display = '';
+      stepAmount.style.display = 'none';
       buyAmountInput.value = '';
       estimateUnits.textContent = '0.00 kWh';
       modalError.style.display = 'none';
       modalConfirm.disabled = false;
       modalConfirm.textContent = 'Dial & Submit';
       buyModal.classList.add('open');
-      buyAmountInput.focus();
     }
     function closeBuyModal() { buyModal.classList.remove('open'); }
+
+    function chooseNetwork(network) {
+      selectedNetwork = network;
+      document.querySelectorAll('.network-btn').forEach((b) => b.classList.toggle('selected', b.dataset.network === network));
+      chosenNetworkLabel.textContent = NETWORK_LABELS[network];
+      stepNetwork.style.display = 'none';
+      stepAmount.style.display = '';
+      buyAmountInput.focus();
+    }
+
+    document.getElementById('network-mtn').addEventListener('click', () => chooseNetwork('mtn'));
+    document.getElementById('network-airtel').addEventListener('click', () => chooseNetwork('airtel'));
+
+    document.getElementById('modal-back').addEventListener('click', () => {
+      stepAmount.style.display = 'none';
+      stepNetwork.style.display = '';
+    });
 
     buyAmountInput.addEventListener('input', () => {
       const amt = parseFloat(buyAmountInput.value) || 0;
       estimateUnits.textContent = fmt(amt / UGX_PER_KWH, 2) + ' kWh';
     });
 
-    document.getElementById('modal-cancel').addEventListener('click', closeBuyModal);
+    document.getElementById('modal-cancel-network').addEventListener('click', closeBuyModal);
     buyModal.addEventListener('click', (e) => { if (e.target === buyModal) closeBuyModal(); });
 
     modalConfirm.addEventListener('click', async () => {
       const amount = parseFloat(buyAmountInput.value);
       modalError.style.display = 'none';
+
+      if (!selectedNetwork) {
+        // Shouldn't normally happen (network step is required first), but
+        // guard anyway in case someone gets back to this step unexpectedly.
+        stepAmount.style.display = 'none';
+        stepNetwork.style.display = '';
+        return;
+      }
       if (!amount || amount <= 0) {
         modalError.textContent = 'Enter a valid amount.';
         modalError.style.display = 'block';
@@ -282,13 +350,11 @@
       modalConfirm.disabled = true;
       modalConfirm.textContent = 'Submitting…';
 
-      const ussdCode = USSD_TEMPLATE.replace('{amount}', Math.round(amount));
-
       try {
         const res = await fetch('/api/dashboard/buy-units', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount, ussd_reference: ussdCode }),
+          body: JSON.stringify({ amount, network: selectedNetwork }),
         });
         const data = await res.json();
 
@@ -299,6 +365,10 @@
           modalConfirm.textContent = 'Dial & Submit';
           return;
         }
+
+        // Use the server-confirmed USSD code (falls back to the local
+        // template if for some reason it wasn't returned).
+        const ussdCode = data.ussd_code || USSD_TEMPLATES[selectedNetwork](Math.round(amount));
 
         // Open the phone dialer with the USSD code pre-filled.
         window.location.href = 'tel:' + encodeURIComponent(ussdCode);
@@ -312,6 +382,7 @@
         modalConfirm.textContent = 'Dial & Submit';
       }
     });
+
 
     async function loadDashboard() {
       try {

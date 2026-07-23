@@ -16,14 +16,20 @@ module.exports = async (req, res) => {
   }
 
   try {
+    // FIX (feature 1): relay_status derived from remaining_units via the
+    // same CASE expression used everywhere else, instead of a hardcoded
+    // 0/1 literal, so this endpoint can never drift from the
+    // "balance > 0 => relay on" rule enforced elsewhere.
     if (action === 'demo_reset') {
       await pool.query(
-        'UPDATE rooms SET remaining_units = 0.0, total_paid = 0.0, relay_status = 0 WHERE room_id = $1',
+        `UPDATE rooms SET remaining_units = 0.0, total_paid = 0.0,
+           relay_status = CASE WHEN 0.0 > 0 THEN 1 ELSE 0 END WHERE room_id = $1`,
         [roomId]
       );
     } else if (action === 'demo_restore') {
       await pool.query(
-        'UPDATE rooms SET remaining_units = 10.0, relay_status = 1 WHERE room_id = $1',
+        `UPDATE rooms SET remaining_units = 10.0,
+           relay_status = CASE WHEN 10.0 > 0 THEN 1 ELSE 0 END WHERE room_id = $1`,
         [roomId]
       );
     } else {

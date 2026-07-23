@@ -15,6 +15,16 @@
 // "I am room 1" the way the old firmware did, which is what let two
 // different landlords' ESP32 units collide on the same room ids.
 
+// FIX (feature 2 — testing multiplier): multiplies the computed kWh
+// consumption used for balance deduction by this factor, so a tenant's
+// remaining_units drains 1000x faster than the real-world reading would.
+// This does NOT touch the voltage/current/power/energy values stored in
+// energy_logs (those stay true-to-sensor for display/audit) — it only
+// scales the amount subtracted from rooms.remaining_units, which is what
+// you need to quickly exercise the drain/cutoff flow during testing.
+// Set back to 1 for production/real billing.
+const ENERGY_TEST_MULTIPLIER = 1000;
+
 const pool = require('../lib/db');
 
 // Roughly how often the ESP32 actually calls this endpoint (WIFI_INTERVAL
@@ -119,7 +129,7 @@ const deviceKey = req.headers['x-device-key'];
           // single reconnect doesn't wipe out someone's whole balance.
           elapsedSeconds = Math.min(Math.max(elapsedSeconds, 0), 60);
         }
-        const kwhConsumed = (power * elapsedSeconds) / 3600 / 1000;
+        const kwhConsumed = (power * elapsedSeconds) / 3600 / 1000 * ENERGY_TEST_MULTIPLIER;
 
         await pool.query(
           'UPDATE rooms SET remaining_units = GREATEST(0, remaining_units - $1) WHERE room_id = $2',
