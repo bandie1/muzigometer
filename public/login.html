@@ -20,6 +20,10 @@
     .form-label { display:block; font-size:0.8rem; font-weight:700; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; }
     .form-input { width:100%; background:rgba(15,23,42,0.6); border:1px solid rgba(255,255,255,0.08); border-radius:12px; padding:14px 16px; color:var(--text-main); font-family:inherit; font-size:0.95rem; }
     .form-input:focus { outline:none; border-color:var(--neon-purple); box-shadow:0 0 15px rgba(139,92,246,0.25); }
+    .password-wrap { position: relative; }
+    .password-wrap .form-input { padding-right: 46px; }
+    .password-toggle { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .password-toggle:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
     .btn-login { width:100%; background:linear-gradient(90deg,var(--neon-purple),var(--neon-blue)); border:none; border-radius:12px; color:white; padding:15px; font-size:1rem; font-weight:800; cursor:pointer; }
     .btn-login:hover { box-shadow:0 0 25px rgba(139,92,246,0.45); }
     .signup-link, .forgot-link { display:block; text-align:center; margin-top:15px; font-size:0.85rem; color:var(--text-muted); text-decoration:none; }
@@ -64,7 +68,12 @@
       </div>
       <div class="form-group">
         <label class="form-label">Password</label>
-        <input class="form-input" type="password" id="password" required>
+        <div class="password-wrap">
+          <input class="form-input" type="password" id="password" required>
+          <button type="button" class="password-toggle" id="password-toggle" aria-label="Show password" title="Show password">
+            <i class="fa-solid fa-eye" id="password-toggle-icon"></i>
+          </button>
+        </div>
       </div>
       <button type="submit" class="btn-login">Login</button>
     </form>
@@ -74,6 +83,18 @@
   </div>
 
   <script>
+    document.getElementById('password-toggle').addEventListener('click', () => {
+      const input = document.getElementById('password');
+      const icon = document.getElementById('password-toggle-icon');
+      const btn = document.getElementById('password-toggle');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      icon.classList.toggle('fa-eye', !isHidden);
+      icon.classList.toggle('fa-eye-slash', isHidden);
+      btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+      btn.setAttribute('title', isHidden ? 'Hide password' : 'Show password');
+    });
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value;

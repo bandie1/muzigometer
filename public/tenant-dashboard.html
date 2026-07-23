@@ -190,12 +190,14 @@
   <style>
     .network-choice-row { display: flex; gap: 12px; margin: 16px 0; }
     .network-btn {
-      flex: 1; padding: 16px 12px; border-radius: 10px; border: 1px solid var(--border-color, #333);
-      background: var(--panel-bg, #1c1c1c); color: inherit; cursor: pointer; font-size: 14px;
+      flex: 1; padding: 16px 12px; border-radius: 10px; border: 1px solid var(--border-color);
+      background: var(--bg-card); color: var(--text-main); cursor: pointer; font-size: 14px;
       display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all .15s ease;
     }
-    .network-btn i { font-size: 22px; }
-    .network-btn:hover, .network-btn.selected { border-color: #f5a623; background: rgba(245,166,35,0.12); }
+    .network-btn i { font-size: 22px; color: var(--text-muted); }
+    .network-btn:hover { border-color: var(--neon-yellow); background: rgba(245, 158, 11, 0.08); }
+    .network-btn.selected { border-color: var(--neon-yellow); background: rgba(245, 158, 11, 0.14); }
+    .network-btn.selected i { color: var(--neon-yellow); }
   </style>
 
   <script>
